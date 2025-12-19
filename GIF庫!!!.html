@@ -1,660 +1,419 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chatbot with Vision (Pollinations.ai)</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        :root {
-            --primary-color: #3F51B5;
-            --secondary-color: #607D8B;
-            --background-color: #f0f2f5;
-            --card-background: #ffffff;
-            --text-color: #333;
-            --light-text-color: #666;
-            --border-color: #e0e0e0;
-            --shadow-color: rgba(0, 0, 0, 0.05);
-            --hover-color: #f5f5f5;
-            --active-color: #e0e0e0;
-            --error-color: #f44336;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            overflow: hidden;
-        }
-        .sidebar {
-            width: 280px;
-            background-color: var(--card-background);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-shadow: 2px 0 5px var(--shadow-color);
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-        .sidebar h2 {
-            margin-top: 0;
-            color: var(--primary-color);
-            text-align: center;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 1.5em;
-        }
-        .new-conversation-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            margin-bottom: 15px;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .new-conversation-btn:hover {
-            background-color: #3949AB;
-        }
-        .model-selector-container {
-            margin-bottom: 20px;
-        }
-        .model-selector-container label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-            font-weight: 500;
-            color: var(--light-text-color);
-        }
-        #model-selector {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--card-background);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95em;
-            cursor: pointer;
-        }
-        #model-selector:focus {
-             outline: none;
-             border-color: var(--primary-color);
-             box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
-        }
-        .conversations-list {
-            flex-grow: 1;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .conversations-list li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .conversations-list li:hover {
-            background-color: var(--hover-color);
-        }
-        .conversations-list li.active {
-            background-color: var(--active-color);
-            font-weight: 600;
-        }
-        .conversation-title {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex-grow: 1;
-            margin-right: 10px;
-        }
-        .delete-conv-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            color: var(--light-text-color);
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.2s ease, background-color 0.2s ease;
-            flex-shrink: 0;
-        }
-        .conversations-list li:hover .delete-conv-btn {
-            visibility: visible;
-            opacity: 1;
-        }
-        .delete-conv-btn:hover {
-            background-color: var(--active-color);
-            color: var(--error-color);
-        }
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            position: relative;
-        }
-        .chat-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background-color: var(--card-background);
-            border-radius: 10px;
-            box-shadow: 0 4px 10px var(--shadow-color);
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .message-container {
-            display: flex;
-            margin-bottom: 15px;
-            align-items: flex-start;
-        }
-        .message-container.user {
-            justify-content: flex-end;
-        }
-        .message-container.ai {
-            justify-content: flex-start;
-        }
-        .message-bubble {
-            max-width: 75%;
-            padding: 12px 18px;
-            border-radius: 20px;
-            line-height: 1.6;
-            word-wrap: break-word;
-            box-shadow: 0 1px 2px var(--shadow-color);
-        }
-        .message-bubble.user img {
-            max-width: 100%;
-            border-radius: 10px;
-            margin-top: 10px;
-        }
-        .message-bubble.user {
-            background-color: var(--primary-color);
-            color: white;
-            border-bottom-right-radius: 5px;
-        }
-        .message-bubble.ai {
-            background-color: var(--hover-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            border-bottom-left-radius: 5px;
-        }
-        .message-bubble.ai pre {
-            background-color: #e9e9e9;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        .input-area-wrapper {
-             position: sticky;
-             bottom: 0;
-             background-color: var(--background-color);
-             padding-top: 10px;
-        }
-        .input-area {
-            display: flex;
-            gap: 10px;
-            padding: 15px;
-            background-color: var(--card-background);
-            border-radius: 10px;
-            box-shadow: 0 -2px 8px var(--shadow-color);
-            align-items: flex-end;
-        }
-        #image-preview-container {
-            padding: 10px;
-            background-color: var(--card-background);
-            border-radius: 10px 10px 0 0;
-            border: 1px solid var(--border-color);
-            border-bottom: none;
-            display: none;
-            position: relative;
-            width: fit-content;
-            max-width: 300px;
-        }
-        #image-preview {
-            max-height: 150px;
-            width: auto;
-            border-radius: 5px;
-        }
-        #remove-image-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: var(--error-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .input-area textarea {
-            flex-grow: 1;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 25px;
-            font-size: 1em;
-            resize: none;
-            min-height: 24px;
-            max-height: 150px;
-            overflow-y: auto;
-            box-shadow: inset 0 1px 3px var(--shadow-color);
-        }
-        .input-area button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        #upload-btn {
-            background-color: var(--secondary-color);
-        }
-        .input-area button:hover {
-            opacity: 0.8;
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary-color);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            display: none;
-        }
-        .spinner.visible {
-            display: block;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @media (max-width: 768px) {
-             .sidebar {
-                 width: 100%;
-                 height: auto;
-                 border-right: none;
-                 border-bottom: 1px solid var(--border-color);
-                 order: -1;
-             }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GIF 庫（SVG 按鈕版）</title>
+<style>
+:root{
+  --accent: #00c896;
+  --bg:#0f1115;
+  --card:#121318;
+  --muted:#9aa1ad;
+  --text:#e6eef8;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC",Arial;
+  background:linear-gradient(180deg,var(--bg),#0b0c0f 60%);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* header */
+.header{
+  display:flex;align-items:center;justify-content:space-between;padding:14px 18px;gap:12px;
+  background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(255,255,255,0.02);
+}
+.brand{font-weight:800;display:flex;align-items:center;gap:12px;cursor:pointer}
+.brand .logo-badge{width:40px;height:40px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#00f0af);display:grid;place-items:center;color:#042018;font-weight:800}
+.search-area{display:flex;gap:8px;align-items:center}
+.input{
+  background:transparent;border:1px solid rgba(255,255,255,0.04);
+  padding:8px 12px;border-radius:999px;color:var(--text);min-width:260px;
+}
+.btn{background:linear-gradient(90deg,var(--accent),#00f0af);color:#042018;border:none;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:700;box-shadow:0 8px 20px rgba(0,200,150,0.08)}
+.icon-row{display:flex;gap:10px;align-items:center}
+.icon-btn{width:44px;height:44px;border-radius:10px;background:var(--card);display:grid;place-items:center;cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+.icon-btn:hover{transform:translateY(-3px);transition:all .12s}
+
+/* categories */
+.categories-wrap{position:relative;background:var(--card);padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.02)}
+.categories{display:flex;gap:18px;justify-content:center;max-width:1000px;margin:0 auto;position:relative}
+.category{position:relative;padding:6px 10px;color:var(--muted);cursor:pointer;border-radius:8px;font-weight:700;display:inline-flex;align-items:center}
+.category.active{color:var(--accent)}
+
+/* layout */
+.container{display:grid;grid-template-columns:1fr 340px;gap:18px;padding:18px}
+@media (max-width:980px){.container{grid-template-columns:1fr;padding:12px}}
+#gifContainer{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+.thumb{width:100%;border-radius:8px;display:block;cursor:pointer}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.meta .title{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.small-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
+.small-btn.primary{background:var(--accent);border:none;color:#042018;padding:7px 10px;border-radius:10px}
+.right-panel{background:linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);max-height:76vh;overflow:auto}
+.section-title{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.01)}
+.token{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:999px;color:var(--text);cursor:pointer}
+
+/* modal */
+.modal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.7));padding:20px}
+.modal.show{display:flex}
+.modal-card{background:var(--card);padding:16px;border-radius:12px;max-width:980px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,0.7)}
+.modal-inner{display:flex;gap:14px;flex-wrap:wrap}
+.viewer-img{max-width:100%;border-radius:10px;display:block}
+
+/* copy grid */
+.copy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.copy-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
+.copy-thumb{width:100%;height:80px;object-fit:cover;border-radius:6px;display:block}
+
+/* palette */
+.palette{position:fixed;right:18px;top:70px;background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);z-index:250;display:none}
+.color-swatch{width:28px;height:28px;border-radius:6px;cursor:pointer;border:1px solid rgba(0,0,0,0.2)}
+
+/* toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#071312;padding:10px 14px;border-radius:10px;color:var(--text);opacity:0;transition:opacity .18s}
+.toast.show{opacity:1}
+
+/* skeleton */
+.skeleton{background:linear-gradient(90deg,#151515,#1b1b1b,#151515);height:140px;border-radius:8px}
+</style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>AI Chat (Pollinations)</h2>
-        <button class="new-conversation-btn" onclick="newConversation()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            New Chat
-        </button>
-        <div class="model-selector-container">
-            <label for="model-selector">Select Model:</label>
-            <select id="model-selector"></select>
-        </div>
-        <ul id="conversations-list" class="conversations-list"></ul>
+
+<!-- header -->
+<div class="header">
+  <div class="brand" id="homeBtn">
+    <div class="logo-badge">GIF</div>
+    <div style="font-size:20px">GIF庫</div>
+  </div>
+
+  <div class="search-area">
+    <input id="searchInput" class="input" placeholder="搜尋 GIF 或按分類..." />
+    <button id="searchBtn" class="btn">搜尋</button>
+  </div>
+
+  <div class="icon-row" style="gap:8px">
+    <button id="historyBtn" class="icon-btn" title="複製歷史">
+      <!-- clock SVG -->
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 8v5l3 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 12A9 9 0 1 0 12 21" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <button id="paletteBtn" class="icon-btn" title="主題顏色">
+      <!-- palette SVG -->
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 2a10 10 0 1 0 10 10" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="8.5" cy="8.5" r="1.2" fill="white"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- categories -->
+<div class="categories-wrap">
+  <div class="categories" id="categories">
+    <div class="category active" data-cat="trending">熱門</div>
+    <div class="category" data-cat="funny">搞笑</div>
+    <div class="category" data-cat="animals">動物</div>
+    <div class="category" data-cat="movies">電影</div>
+    <div class="category" data-cat="music">音樂</div>
+  </div>
+</div>
+
+<!-- main -->
+<div class="container">
+  <main>
+    <div id="gifContainer"></div>
+  </main>
+
+  <aside class="right-panel">
+    <div>
+      <div class="section-title">
+        <div>搜尋紀錄</div>
+        <div><button id="clearSearchAll" class="small-btn">全部清除</button></div>
+      </div>
+      <div id="searchHistory"></div>
     </div>
-    <div class="main-content">
-        <div id="chat-area" class="chat-area">
-        </div>
-        <div class="input-area-wrapper">
-            <div id="image-preview-container">
-                <img id="image-preview" src="" alt="Image preview"/>
-                <button id="remove-image-btn" onclick="removeImage()">×</button>
-            </div>
-            <div class="input-area">
-                <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <button id="upload-btn" onclick="document.getElementById('image-input').click()" title="Upload Image">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                </button>
-                <textarea id="user-input" placeholder="Type your message..." rows="1"></textarea>
-                <button id="send-btn" onclick="sendMessage()" title="Send Message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
-            </div>
-        </div>
+
+    <hr style="opacity:.06;margin:12px 0">
+
+    <div style="margin-top:8px">
+      <div class="section-title"><div>說明</div></div>
+      <div style="color:var(--muted);font-size:13px;line-height:1.45">
+        點縮圖可檢視並複製 .gif 連結。搜尋與複製紀錄保存在你的瀏覽器 (LocalStorage)。
+      </div>
     </div>
-    <script>
-        // DOM Elements
-        const chatArea = document.getElementById('chat-area');
-        const userInput = document.getElementById('user-input');
-        const conversationsList = document.getElementById('conversations-list');
-        const modelSelector = document.getElementById('model-selector');
-        const imageInput = document.getElementById('image-input');
-        const imagePreviewContainer = document.getElementById('image-preview-container');
-        const imagePreview = document.getElementById('image-preview');
+  </aside>
+</div>
 
-        // --- Configuration for Pollinations AI ---
-        const POLLINATIONS_API_URL = 'https://text.pollinations.ai/openai';
-        const POLLINATIONS_MODELS_URL = 'https://text.pollinations.ai/models';
+<!-- viewer modal -->
+<div id="viewerModal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700">GIF 檢視</div>
+      <div>
+        <button id="downloadBtn" class="small-btn">下載</button>
+        <button id="closeViewer" class="small-btn">關閉</button>
+      </div>
+    </div>
+    <div style="margin-top:12px" class="modal-inner">
+      <div style="flex:1">
+        <img id="viewerImg" class="viewer-img" src="" alt="GIF">
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button id="copyLinkBtn" class="btn">複製 .gif 連結</button>
+          <button id="copyImgTagBtn" class="small-btn">複製 &lt;img&gt; 標籤</button>
+        </div>
+      </div>
+      <div style="width:320px">
+        <div style="font-weight:700">GIF 詳細</div>
+        <div id="gifMeta" style="margin-top:8px;color:var(--muted);font-size:13px"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        // --- State ---
-        let conversations = [];
-        let currentConversationId = null;
-        let uploadedImageBase64 = null;
+<!-- history modal -->
+<div id="historyModal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700">複製紀錄</div>
+      <div>
+        <button id="clearCopyAll" class="small-btn">全部清除</button>
+        <button id="closeHistory" class="small-btn">關閉</button>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div id="copyGrid" class="copy-grid"></div>
+    </div>
+  </div>
+</div>
 
-        // --- Image Handling Functions ---
-        imageInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                uploadedImageBase64 = e.target.result;
-                imagePreview.src = uploadedImageBase64;
-                imagePreviewContainer.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        });
+<!-- palette panel -->
+<div id="palette" class="palette" aria-hidden="true">
+  <div style="font-weight:700">主題顏色</div>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div class="color-swatch" data-color="#00c896" style="background:linear-gradient(90deg,#00c896,#00f0af)"></div>
+    <div class="color-swatch" data-color="#7c4dff" style="background:linear-gradient(90deg,#7c4dff,#b56bff)"></div>
+    <div class="color-swatch" data-color="#ff7a59" style="background:linear-gradient(90deg,#ff7a59,#ffd07a)"></div>
+    <div class="color-swatch" data-color="#5bc0ff" style="background:linear-gradient(90deg,#5bc0ff,#8fe0ff)"></div>
+    <input id="colorInput" type="color" value="#00c896" style="margin-left:auto;border-radius:6px;border:none;height:36px;width:56px;cursor:pointer">
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="resetTheme" class="small-btn">重設</button>
+    <button id="saveTheme" class="btn">儲存</button>
+  </div>
+</div>
 
-        function removeImage() {
-            uploadedImageBase64 = null;
-            imagePreview.src = '';
-            imagePreviewContainer.style.display = 'none';
-            imageInput.value = '';
-        }
+<div id="toast" class="toast">已完成</div>
 
-        // --- Chat Functions ---
-        function addMessageToChat(message, sender, imageUrl = null) {
-            const messageContainer = document.createElement('div');
-            messageContainer.classList.add('message-container', sender);
-            const messageBubble = document.createElement('div');
-            messageBubble.classList.add('message-bubble', sender);
-            messageBubble.innerHTML = marked.parse(message);
-            if (imageUrl && sender === 'user') {
-                const imgElement = document.createElement('img');
-                imgElement.src = imageUrl;
-                messageBubble.appendChild(imgElement);
-            }
-            messageContainer.appendChild(messageBubble);
-            chatArea.appendChild(messageContainer);
-            chatArea.scrollTop = chatArea.scrollHeight;
-            return messageContainer;
-        }
+<script>
+/* ========== Config ========== */
+const API_KEY = "uVgsoRuFkTSGi2O1lxQracR4ZyAHeg48";
+const LS_SEARCH = "giflib_search_v2";
+const LS_COPY = "giflib_copy_v2";
+const LS_THEME = "giflib_theme_v2";
+const LIMIT = 24;
 
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message && !uploadedImageBase64) return;
+/* ========== State ========== */
+let searchHistory = load(LS_SEARCH, []);
+let copyHistory = load(LS_COPY, []);
+let currentGif = null;
+let query = "trending";
+let offset = 0;
+let loading = false;
 
-            const selectedModel = modelSelector.value;
-            if (!selectedModel) {
-                 addMessageToChat("Please select a model from the dropdown first.", 'ai');
-                 return;
-            }
+/* ========== Init ========== */
+applySavedTheme();
+renderCategories(); 
+renderSearchHistory();
+renderCopyBadge();
+fetchGIFs("trending",0);
 
-            const currentConv = conversations.find(conv => conv.id === currentConversationId);
-            if (!currentConv) {
-                console.error("No active conversation found.");
-                return;
-            }
+/* ========== Helpers ========== */
+function load(key, fallback){ try{ const raw=localStorage.getItem(key); return raw?JSON.parse(raw):fallback;}catch(e){return fallback;} }
+function save(key,v){ localStorage.setItem(key, JSON.stringify(v)); }
+function showToast(txt="完成"){ const t=document.getElementById("toast"); t.textContent=txt; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1400); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-            addMessageToChat(message, 'user', uploadedImageBase64);
+/* ========== Categories ========== */
+function renderCategories(){
+  const cats = Array.from(document.querySelectorAll(".category"));
+  cats.forEach(c=>{
+    c.addEventListener("click", ()=>{
+      cats.forEach(x=>x.classList.remove("active"));
+      c.classList.add("active");
+      query = c.dataset.cat === "trending" ? "trending" : c.dataset.cat;
+      offset = 0; document.getElementById("gifContainer").innerHTML = "";
+      fetchGIFs(query, 0);
+    });
+  });
+}
 
-            const userMessageData = { role: 'user', text: message, image: uploadedImageBase64 };
-            currentConv.messages.push(userMessageData);
-            saveConversations();
+/* ========== Search history UI ========== */
+function renderSearchHistory(){
+  const el = document.getElementById("searchHistory");
+  el.innerHTML = "";
+  if(searchHistory.length === 0){
+    const p=document.createElement("div"); p.style.color="var(--muted)"; p.style.fontSize="13px"; p.textContent="尚無搜尋紀錄"; el.appendChild(p); return;
+  }
+  searchHistory.forEach((t,i)=>{
+    const row=document.createElement("div"); row.className="history-item";
+    const token=document.createElement("div"); token.className="token"; token.textContent=t;
+    token.onclick = ()=>{ document.getElementById("searchInput").value=t; doSearch(t); };
+    const right=document.createElement("div");
+    const del=document.createElement("button"); del.className="small-btn"; del.textContent="刪除";
+    del.onclick = ()=>{ searchHistory.splice(i,1); save(LS_SEARCH,searchHistory); renderSearchHistory(); };
+    right.appendChild(del); row.appendChild(token); row.appendChild(right); el.appendChild(row);
+  });
+  const clearWrap=document.createElement("div"); clearWrap.style.marginTop="8px";
+  const clearBtn=document.createElement("button"); clearBtn.className="small-btn"; clearBtn.textContent="全部清除";
+  clearBtn.onclick = ()=>{ if(confirm("清除全部搜尋紀錄？")){ searchHistory=[]; save(LS_SEARCH,[]); renderSearchHistory(); } };
+  clearWrap.appendChild(clearBtn); el.appendChild(clearWrap);
+}
+document.getElementById("clearSearchAll").addEventListener("click", ()=>{ if(confirm("清除全部搜尋紀錄？")){ searchHistory=[]; save(LS_SEARCH,[]); renderSearchHistory(); } });
 
-            const imageSent = uploadedImageBase64;
-            userInput.value = '';
-            userInput.style.height = 'auto';
-            removeImage();
+/* ========== Fetch GIFs (GIPHY) ========== */
+async function fetchGIFs(q, off=0){
+  loading = true;
+  const container = document.getElementById("gifContainer");
+  if(off === 0) container.innerHTML = generateSkeleton(8);
+  const endpoint = (q === "trending")
+    ? `https://api.giphy.com/v1/gifs/trending?api_key=${API_KEY}&limit=${LIMIT}&offset=${off}&rating=g`
+    : `https://api.giphy.com/v1/gifs/search?api_key=${API_KEY}&q=${encodeURIComponent(q)}&limit=${LIMIT}&offset=${off}&rating=g`;
+  try{
+    const res = await fetch(endpoint);
+    const json = await res.json();
+    const arr = json.data || [];
+    if(off === 0 && arr.length === 0){ container.innerHTML = '<div style="color:var(--muted)">無結果</div>'; }
+    renderGIFs(arr, off > 0);
+  }catch(err){
+    console.error(err);
+    container.innerHTML = '<div style="color:var(--muted)">載入失敗</div>';
+    showToast("載入失敗（檢查 API key 或網路）");
+  }
+  loading = false;
+}
 
-            const aiMessageContainer = document.createElement('div');
-            aiMessageContainer.classList.add('message-container', 'ai');
-            aiMessageContainer.innerHTML = `<div class="message-bubble ai"><div class="spinner visible"></div></div>`;
-            chatArea.appendChild(aiMessageContainer);
-            chatArea.scrollTop = chatArea.scrollHeight;
+function generateSkeleton(n){ let html=''; for(let i=0;i<n;i++) html+=`<div class="card"><div class="skeleton"></div></div>`; return html; }
 
-            try {
-                const messagesPayload = [];
-                currentConv.messages.slice(0, -1).forEach(msg => {
-                    const role = msg.role === 'ai' ? 'assistant' : 'user';
-                    if (msg.text) {
-                        messagesPayload.push({ role: role, content: msg.text });
-                    }
-                });
-                const currentUserMessage = { role: 'user' };
-                if (imageSent) {
-                    currentUserMessage.content = [
-                        { type: 'text', text: message },
-                        { type: 'image_url', image_url: { url: imageSent } }
-                    ];
-                } else {
-                    currentUserMessage.content = message;
-                }
-                messagesPayload.push(currentUserMessage);
+function renderGIFs(gifs, append=false){
+  const container = document.getElementById("gifContainer");
+  if(!append) container.innerHTML = "";
+  gifs.forEach(g=>{
+    const card=document.createElement("div"); card.className="card";
+    const img=document.createElement("img"); img.className="thumb"; img.src = g.images.fixed_width_downsampled?.url || g.images.fixed_height?.url || g.images.original?.url; img.alt=g.title||"GIF"; img.loading="lazy";
+    img.addEventListener("click", ()=> openViewer(g));
+    const meta=document.createElement("div"); meta.className="meta";
+    const title=document.createElement("div"); title.className="title"; title.textContent=g.title||"—";
+    const right=document.createElement("div");
+    const copyBtn=document.createElement("button"); copyBtn.className="small-btn"; copyBtn.textContent="複製";
+    copyBtn.onclick = async (e)=>{ e.stopPropagation(); const url = chooseUrl(g); try{ await navigator.clipboard.writeText(url); copyHistory.unshift({url,title:g.title||"",ts:Date.now()}); save(LS_COPY,copyHistory); renderCopyBadge(); showToast("已複製 GIF 連結"); }catch(err){ alert("複製失敗"); } };
+    right.appendChild(copyBtn);
+    meta.appendChild(title); meta.appendChild(right);
+    card.appendChild(img); card.appendChild(meta); container.appendChild(card);
+  });
+}
 
-                const payload = {
-                    model: selectedModel,
-                    messages: messagesPayload,
-                    max_tokens: 500
-                };
+function chooseUrl(g){ return (g.images.original && g.images.original.url) || (g.images.downsized && g.images.downsized.url) || (g.images.fixed_height && g.images.fixed_height.url) || ""; }
 
-                const res = await fetch(POLLINATIONS_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+/* infinite scroll */
+window.addEventListener("scroll", ()=>{ if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 120){ if(!loading){ offset += LIMIT; fetchGIFs(query, offset); } } });
 
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    throw new Error(`API Error: ${res.status} ${res.statusText} - ${errorText}`);
-                }
-                const data = await res.json();
-                const aiResponse = data.choices[0]?.message?.content || "No valid response received.";
+/* ========== Search logic ========== */
+document.getElementById("searchBtn").addEventListener("click", ()=> doSearch(document.getElementById("searchInput").value.trim()));
+document.getElementById("searchInput").addEventListener("keydown", (e)=>{ if(e.key === "Enter") doSearch(e.target.value.trim()); });
 
-                aiMessageContainer.querySelector('.message-bubble').innerHTML = marked.parse(aiResponse);
+function doSearch(q){ if(!q) return; const idx=searchHistory.indexOf(q); if(idx!==-1) searchHistory.splice(idx,1); searchHistory.unshift(q); save(LS_SEARCH,searchHistory); renderSearchHistory(); query=q; offset=0; fetchGIFs(query,0); }
 
-                currentConv.messages.push({ role: 'ai', text: aiResponse, image: null });
-                if (currentConv.title === 'New Conversation' && currentConv.messages.length >= 2) {
-                    currentConv.title = message.substring(0, 30) + (message.length > 30 ? '...' : '');
-                    renderConversationsList();
-                }
-                saveConversations();
-            } catch (error) {
-                console.error("Error:", error);
-                aiMessageContainer.querySelector('.message-bubble').innerHTML = marked.parse(`**Error:** ${error.message}`);
-            } finally {
-                chatArea.scrollTop = chatArea.scrollHeight;
-            }
-        }
+/* ========== Viewer & copy/download ========== */
+function openViewer(g){ currentGif=g; const url = chooseUrl(g); document.getElementById("viewerImg").src = url; document.getElementById("gifMeta").innerHTML = `<div><strong>標題：</strong>${escapeHtml(g.title||"—")}</div><div style="margin-top:8px"><strong>來源：</strong>${escapeHtml(g.username||"GIPHY")}</div>`; showModal("viewerModal"); }
+document.getElementById("closeViewer").addEventListener("click", ()=> hideModal("viewerModal"));
+document.getElementById("downloadBtn").addEventListener("click", ()=> { if(!currentGif) return; const url=chooseUrl(currentGif); const a=document.createElement("a"); a.href=url; a.download="gif.gif"; document.body.appendChild(a); a.click(); a.remove(); });
+document.getElementById("copyLinkBtn").addEventListener("click", async ()=> { if(!currentGif) return; const url=chooseUrl(currentGif); try{ await navigator.clipboard.writeText(url); copyHistory.unshift({url,title:currentGif.title||"",ts:Date.now()}); save(LS_COPY,copyHistory); renderCopyBadge(); showToast("已複製 GIF 連結"); }catch(e){ alert("複製失敗"); } });
+document.getElementById("copyImgTagBtn").addEventListener("click", async ()=> { if(!currentGif) return; const url=chooseUrl(currentGif); const tag=`<img src="${url}" alt="${escapeHtml(currentGif.title||'GIF')}">`; try{ await navigator.clipboard.writeText(tag); showToast("已複製 <img> 標籤"); }catch(e){ alert("複製失敗"); } });
 
-        // --- Conversation Management ---
-        function generateUniqueId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
+/* ========== Copy history modal ========== */
+document.getElementById("historyBtn").addEventListener("click", ()=> { renderCopyGrid(); showModal("historyModal"); });
+document.getElementById("closeHistory").addEventListener("click", ()=> hideModal("historyModal"));
+document.getElementById("clearCopyAll").addEventListener("click", ()=> { if(confirm("清除全部複製紀錄？")){ copyHistory=[]; save(LS_COPY,copyHistory); renderCopyGrid(); renderCopyBadge(); } });
 
-        function newConversation() {
-            const newConv = { id: generateUniqueId(), title: 'New Conversation', messages: [] };
-            conversations.unshift(newConv);
-            saveConversations();
-            loadConversation(newConv.id);
-            renderConversationsList();
-        }
+function renderCopyGrid(){
+  const grid = document.getElementById("copyGrid"); grid.innerHTML = "";
+  if(copyHistory.length === 0){ const p=document.createElement("div"); p.style.color="var(--muted)"; p.textContent="尚無複製紀錄"; grid.appendChild(p); renderCopyBadge(); return; }
+  copyHistory.forEach((item, idx)=>{
+    const card=document.createElement("div"); card.className="copy-card";
+    const img=document.createElement("img"); img.className="copy-thumb"; img.src=item.url; img.alt=item.title||"GIF"; img.loading="lazy";
+    img.addEventListener("click", ()=> { document.getElementById("viewerImg").src = item.url; showModal("viewerModal"); document.getElementById("gifMeta").innerHTML = `<div><strong>標題：</strong>${escapeHtml(item.title||'—')}</div><div style="margin-top:8px"><strong>加入：</strong>${new Date(item.ts).toLocaleString()}</div>`; });
+    const actions=document.createElement("div"); actions.style.marginTop="8px"; actions.style.display="flex"; actions.style.justifyContent="space-between";
+    const copyBtn=document.createElement("button"); copyBtn.className="small-btn"; copyBtn.textContent="複製";
+    copyBtn.addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText(item.url); showToast("已複製"); }catch(e){ alert("複製失敗"); }});
+    const delBtn=document.createElement("button"); delBtn.className="small-btn"; delBtn.textContent="刪除";
+    delBtn.addEventListener("click", ()=>{ if(!confirm("刪除此筆複製紀錄？")) return; copyHistory.splice(idx,1); save(LS_COPY,copyHistory); renderCopyGrid(); renderCopyBadge(); });
+    actions.appendChild(copyBtn); actions.appendChild(delBtn);
+    card.appendChild(img); card.appendChild(actions); grid.appendChild(card);
+  });
+}
 
-        function loadConversation(id) {
-            currentConversationId = id;
-            localStorage.setItem('lastActiveConversationId', id);
-            const conversation = conversations.find(conv => conv.id === id);
+/* badge */
+function renderCopyBadge(){ const b=document.getElementById("historyBtn").querySelector('svg')?.parentElement?.querySelector('span'); const badge = document.getElementById("historyBadge"); if(badge){ if(copyHistory.length===0) badge.style.display='none'; else { badge.style.display='inline-block'; badge.textContent = copyHistory.length; } } else { /* none */ } }
+(function attachBadge(){
+  const btn = document.getElementById("historyBtn");
+  const span = document.createElement("span");
+  span.id = "historyBadge";
+  span.style.position="absolute"; span.style.top="-6px"; span.style.right="-6px";
+  span.style.background="var(--accent)"; span.style.color="#042018"; span.style.padding="4px 6px";
+  span.style.borderRadius="999px"; span.style.fontSize="11px"; span.style.display="none";
+  btn.style.position="relative"; btn.appendChild(span);
+})();
 
-            if (conversation) {
-                chatArea.innerHTML = '';
-                if (conversation.messages.length === 0) {
-                    const initialMsg = "Hi! I'm powered by Pollinations AI. Select a model, then send a message or upload an image to start.";
-                    addMessageToChat(initialMsg, 'ai');
-                    conversation.messages.push({ role: 'ai', text: initialMsg, image: null });
-                    saveConversations();
-                } else {
-                    conversation.messages.forEach(msg => {
-                        const sender = msg.role === 'assistant' ? 'ai' : msg.role;
-                        addMessageToChat(msg.text, sender, msg.image);
-                    });
-                }
-                renderConversationsList();
-            }
-        }
+/* modal helpers */
+function showModal(id){ document.getElementById(id).classList.add("show"); document.getElementById(id).style.display='flex'; }
+function hideModal(id){ document.getElementById(id).classList.remove("show"); document.getElementById(id).style.display='none'; }
+document.getElementById("viewerModal").addEventListener("click", (e)=>{ if(e.target === document.getElementById("viewerModal")) hideModal("viewerModal"); });
+document.getElementById("historyModal").addEventListener("click", (e)=>{ if(e.target === document.getElementById("historyModal")) hideModal("historyModal"); });
 
-        function deleteConversation(idToDelete) {
-            if (!confirm('Are you sure you want to delete this conversation?')) {
-                return;
-            }
+/* ========== Palette / Theme ========== */
+document.getElementById("paletteBtn").addEventListener("click", ()=> { const p=document.getElementById("palette"); p.style.display = p.style.display === "block" ? "none":"block"; document.getElementById("colorInput").value = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#00c896"; });
+document.querySelectorAll(".color-swatch").forEach(s=> s.addEventListener("click", ()=>{ const c=s.dataset.color; document.documentElement.style.setProperty("--accent", c); document.getElementById("colorInput").value = c; }));
+document.getElementById("saveTheme").addEventListener("click", ()=>{ const c=document.getElementById("colorInput").value; document.documentElement.style.setProperty("--accent", c); localStorage.setItem(LS_THEME, JSON.stringify({accent:c})); showToast("主題已儲存"); });
+document.getElementById("resetTheme").addEventListener("click", ()=>{ localStorage.removeItem(LS_THEME); document.documentElement.style.setProperty("--accent", "#00c896"); document.getElementById("colorInput").value="#00c896"; showToast("已重設"); });
+function applySavedTheme(){ const s = load(LS_THEME, null); if(s && s.accent){ document.documentElement.style.setProperty("--accent", s.accent); const ip=document.getElementById("colorInput"); if(ip) ip.value = s.accent; } else document.documentElement.style.setProperty("--accent", "#00c896"); }
 
-            const conversationIndex = conversations.findIndex(conv => conv.id === idToDelete);
-            if (conversationIndex === -1) {
-                console.error("Conversation to delete not found.");
-                return;
-            }
+/* ========== Events: history & home & search ========== */
+document.getElementById("historyBtn").addEventListener("click", ()=>{ renderCopyGrid(); showModal("historyModal"); });
+document.getElementById("closeHistory").addEventListener("click", ()=> hideModal("historyModal"));
+document.getElementById("clearCopyAll").addEventListener("click", ()=>{ if(confirm("清除全部複製紀錄？")){ copyHistory=[]; save(LS_COPY,copyHistory); renderCopyGrid(); renderCopyBadge(); } });
 
-            conversations.splice(conversationIndex, 1);
+document.getElementById("homeBtn").addEventListener("click", ()=>{ document.querySelectorAll('.category').forEach(c=>c.classList.remove('active')); document.querySelector('.category[data-cat=\"trending\"]').classList.add('active'); query='trending'; offset=0; document.getElementById('gifContainer').innerHTML=''; fetchGIFs('trending',0); });
 
-            if (currentConversationId === idToDelete) {
-                localStorage.removeItem('lastActiveConversationId');
-                currentConversationId = null;
+document.getElementById("searchBtn").addEventListener("click", ()=> { const v=document.getElementById("searchInput").value.trim(); if(v){ doSearch(v); } });
+document.getElementById("searchInput").addEventListener("keydown", (e)=>{ if(e.key==='Enter'){ const v=e.target.value.trim(); if(v) doSearch(v); } });
 
-                if (conversations.length > 0) {
-                    loadConversation(conversations[0].id);
-                } else {
-                    newConversation();
-                }
-            }
-            saveConversations();
-            renderConversationsList();
-        }
+/* ========== Search history operations ========== */
+function doSearch(q){ if(!q) return; const idx = searchHistory.indexOf(q); if(idx !== -1) searchHistory.splice(idx,1); searchHistory.unshift(q); save(LS_SEARCH,searchHistory); renderSearchHistory(); query=q; offset=0; fetchGIFs(query,0); }
+function renderSearchHistory(){ const el=document.getElementById("searchHistory"); el.innerHTML=''; if(searchHistory.length===0){ const p=document.createElement('div'); p.style.color='var(--muted)'; p.textContent='尚無搜尋紀錄'; el.appendChild(p); return;} searchHistory.forEach((t,i)=>{ const row=document.createElement('div'); row.className='history-item'; const token=document.createElement('div'); token.className='token'; token.textContent=t; token.onclick=()=>{ document.getElementById('searchInput').value=t; doSearch(t); }; const right=document.createElement('div'); const del=document.createElement('button'); del.className='small-btn'; del.textContent='刪除'; del.onclick=()=>{ searchHistory.splice(i,1); save(LS_SEARCH,searchHistory); renderSearchHistory(); }; right.appendChild(del); row.appendChild(token); row.appendChild(right); el.appendChild(row); }); const clearWrap=document.createElement('div'); clearWrap.style.marginTop='8px'; const clearBtn=document.createElement('button'); clearBtn.className='small-btn'; clearBtn.textContent='全部清除'; clearBtn.onclick=()=>{ if(confirm('清除全部搜尋紀錄？')){ searchHistory=[]; save(LS_SEARCH,[]); renderSearchHistory(); } }; clearWrap.appendChild(clearBtn); el.appendChild(clearWrap); }
 
-        function renderConversationsList() {
-            conversationsList.innerHTML = '';
-            conversations.forEach(conv => {
-                const li = document.createElement('li');
-                li.className = (conv.id === currentConversationId) ? 'active' : '';
-                li.onclick = () => loadConversation(conv.id);
+/* ========== init copyHistory badge ========== */
+(function initCopyHistory(){ copyHistory = load(LS_COPY, copyHistory); renderCopyBadge(); })();
 
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'conversation-title';
-                titleSpan.textContent = conv.title;
+/* ========== Utilities ========== */
+function renderCopyGrid(){ const grid=document.getElementById('copyGrid'); grid.innerHTML=''; if(copyHistory.length===0){ const p=document.createElement('div'); p.style.color='var(--muted)'; p.textContent='尚無複製紀錄'; grid.appendChild(p); renderCopyBadge(); return; } copyHistory.forEach((item,idx)=>{ const card=document.createElement('div'); card.className='copy-card'; const img=document.createElement('img'); img.className='copy-thumb'; img.src=item.url; img.alt=item.title||'GIF'; img.loading='lazy'; img.addEventListener('click', ()=>{ document.getElementById('viewerImg').src=item.url; showModal('viewerModal'); document.getElementById('gifMeta').innerHTML=`<div><strong>標題：</strong>${escapeHtml(item.title||'—')}</div><div style="margin-top:8px"><strong>加入：</strong>${new Date(item.ts).toLocaleString()}</div>`; }); const actions=document.createElement('div'); actions.style.marginTop='8px'; actions.style.display='flex'; actions.style.justifyContent='space-between'; const copyBtn=document.createElement('button'); copyBtn.className='small-btn'; copyBtn.textContent='複製'; copyBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(item.url); showToast('已複製'); }catch(e){ alert('複製失敗'); } }); const delBtn=document.createElement('button'); delBtn.className='small-btn'; delBtn.textContent='刪除'; delBtn.addEventListener('click', ()=>{ if(!confirm('刪除此筆複製紀錄？')) return; copyHistory.splice(idx,1); save(LS_COPY,copyHistory); renderCopyGrid(); renderCopyBadge(); }); actions.appendChild(copyBtn); actions.appendChild(delBtn); card.appendChild(img); card.appendChild(actions); grid.appendChild(card); }); }
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-conv-btn';
-                deleteBtn.title = "Delete conversation";
-                deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+function renderCopyBadge(){ const badge=document.getElementById('historyBadge'); if(!badge) return; if(copyHistory.length===0) badge.style.display='none'; else { badge.style.display='inline-block'; badge.textContent = copyHistory.length; } }
 
-                deleteBtn.onclick = (event) => {
-                    event.stopPropagation(); // Prevent loading the conversation when deleting
-                    deleteConversation(conv.id);
-                };
+(function attachBadge(){ const btn=document.getElementById('historyBtn'); const span=document.createElement('span'); span.id='historyBadge'; span.style.position='absolute'; span.style.top='-6px'; span.style.right='-6px'; span.style.background='var(--accent)'; span.style.color='#042018'; span.style.padding='4px 6px'; span.style.borderRadius='999px'; span.style.fontSize='11px'; span.style.display='none'; btn.style.position='relative'; btn.appendChild(span); })();
 
-                li.appendChild(titleSpan);
-                li.appendChild(deleteBtn);
-                conversationsList.appendChild(li);
-            });
-        }
+function applySavedTheme(){ const s = load(LS_THEME, null); if(s && s.accent){ document.documentElement.style.setProperty('--accent', s.accent); const ip=document.getElementById('colorInput'); if(ip) ip.value = s.accent; } else document.documentElement.style.setProperty('--accent', '#00c896'); }
 
-        function saveConversations() {
-            localStorage.setItem('chatbotConversations', JSON.stringify(conversations));
-        }
-
-        function loadConversationsFromStorage() {
-            const stored = localStorage.getItem('chatbotConversations');
-            if (stored) {
-                conversations = JSON.parse(stored);
-                conversations.forEach(conv => {
-                    if (!conv.messages) conv.messages = []; // Data integrity check
-                    conv.messages.forEach(msg => {
-                        if (msg.sender) { msg.role = msg.sender; delete msg.sender; }
-                    });
-                });
-                const lastId = localStorage.getItem('lastActiveConversationId');
-                currentConversationId = conversations.some(c => c.id === lastId) ? lastId : (conversations[0]?.id || null);
-            }
-            if (conversations.length === 0 || !currentConversationId) {
-                newConversation();
-            } else {
-                loadConversation(currentConversationId);
-                renderConversationsList();
-            }
-        }
-
-        // --- Model Fetching from Pollinations ---
-        async function fetchAvailableModels() {
-            try {
-                const response = await fetch(POLLINATIONS_MODELS_URL);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch models from Pollinations AI.');
-                }
-                const data = await response.json();
-                const allModelIds = Object.keys(data);
-                const availableModelIds = allModelIds.filter(id => data[id].audio === false);
-                if (availableModelIds.length === 0) {
-                    throw new Error("No suitable (non-audio) models found in API response.");
-                }
-
-                modelSelector.innerHTML = '<option value="" disabled>Select a Model</option>';
-                availableModelIds.forEach(modelId => {
-                    const modelDetails = data[modelId];
-                    const option = document.createElement('option');
-                    option.value = modelId;
-                    option.textContent = modelDetails.description || modelId;
-                    modelSelector.appendChild(option);
-                });
-
-                const savedModel = localStorage.getItem('selectedModel');
-                if (savedModel && availableModelIds.includes(savedModel)) {
-                    modelSelector.value = savedModel;
-                } else {
-                    modelSelector.selectedIndex = 0;
-                }
-
-            } catch (error) {
-                console.error('Error fetching models:', error);
-                addMessageToChat(`**Warning:** Could not fetch model list. Error: ${error.message}`, 'ai');
-                modelSelector.innerHTML = '<option value="llava">llava (fallback)</option>';
-            }
-        }
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadConversationsFromStorage();
-            fetchAvailableModels();
-        });
-
-        userInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
-
-        modelSelector.addEventListener('change', (event) => {
-            localStorage.setItem('selectedModel', event.target.value);
-        });
-    </script>
+/* ========== Initial fetch ========== */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
 </body>
 </html>
