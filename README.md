@@ -7,7 +7,7 @@ URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/GIF%E5%BA
 # 魔法咒語特效
 Google Drive : https://drive.google.com/file/d/1nlOBBQOccg3dhUHPBubjOwp7i-WbuGdB/view?usp=share_link  
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/main/%E9%AD%94%E6%B3%95%E5%92%92%E8%AA%9E%E7%89%B9%E6%95%88.html
-# 智能翻譯器
+# 智能翻譯器(Bug多)
 Google Drive : https://drive.google.com/file/d/1uDPSniaKNqhGQHg42kuRynwnn-tBgNh2/view?usp=share_link  
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%99%BA%E8%83%BD%E7%BF%BB%E8%AD%AF%E5%99%A8.html
 # 質因數計算
