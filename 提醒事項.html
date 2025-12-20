@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提醒事項 v4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .priority-high {
+            border-left: 4px solid #dc2626;
+            background: linear-gradient(90deg, rgba(220, 38, 38, 0.05) 0%, transparent 100%);
+        }
+        .priority-medium {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, transparent 100%);
+        }
+        .priority-low {
+            border-left: 4px solid #10b981;
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+        }
+
+        .search-highlight {
+            background-color: #fef08a;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+            max-width: 400px;
+        }
+        .kanban-column {
+            min-height: 400px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .drag-over {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px dashed #3b82f6;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+    <!-- 通知容器 -->
+    <div id="notifications" class="notification"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="glass-effect border-b border-white/20 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        📋 提醒事項 v4.0
+                    </h1>
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-semibold">
+                        BETA
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- 搜尋框 -->
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="searchInput"
+                            placeholder="搜尋提醒事項..."
+                            class="pl-10 pr-10 py-2 w-64 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                            oninput="searchTodos()"
+                        >
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-400">🔍</span>
+                        </div>
+                        <button 
+                            id="clearSearchBtn"
+                            onclick="clearSearch()"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 hidden"
+                            title="清除搜尋"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <!-- 視圖切換 -->
+                    <div class="flex bg-gray-100 rounded-lg p-1">
+                        <button 
+                            id="listViewBtn"
+                            onclick="switchView('list')"
+                            class="px-3 py-1 rounded-md text-sm font-medium transition-colors bg-white shadow-sm text-indigo-600"
+                        >
+                            📋 列表
+                        </button>
+                        <button 
+                            id="kanbanViewBtn"
+                            onclick="switchView('kanban')"
+                            class="px-3 py-1 rounded-md text-sm font-medium transition-colors text-gray-600 hover:text-indigo-600"
+                        >
+                            📊 看板
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 統計儀表板 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div class="glass-effect rounded-2xl p-6 text-center border border-white/20">
+                <div class="relative w-16 h-16 mx-auto mb-4">
+                    <svg class="w-16 h-16 progress-ring">
+                        <circle cx="32" cy="32" r="28" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                        <circle 
+                            id="totalProgress"
+                            cx="32" cy="32" r="28" 
+                            stroke="#3b82f6" 
+                            stroke-width="4" 
+                            fill="none"
+                            class="progress-ring-circle"
+                            stroke-dasharray="176"
+                            stroke-dashoffset="176"
+                        />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-2xl font-bold text-blue-600" id="totalCount">0</span>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600 font-medium">總計</div>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-6 text-center border border-white/20">
+                <div class="text-3xl font-bold text-green-600 mb-2" id="completedCount">0</div>
+                <div class="text-sm text-gray-600 font-medium">已完成</div>
+                <div class="text-xs text-green-600 mt-1" id="completedPercent">0%</div>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-6 text-center border border-white/20">
+                <div class="text-3xl font-bold text-orange-600 mb-2" id="pendingCount">0</div>
+                <div class="text-sm text-gray-600 font-medium">進行中</div>
+                <div class="text-xs text-orange-600 mt-1" id="pendingPercent">0%</div>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-6 text-center border border-white/20">
+                <div class="text-3xl font-bold text-red-600 mb-2" id="overdueCount">0</div>
+                <div class="text-sm text-gray-600 font-medium">已逾期</div>
+                <div class="text-xs text-red-600 mt-1" id="overduePercent">0%</div>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-6 text-center border border-white/20">
+                <div class="text-3xl font-bold text-purple-600 mb-2" id="highPriorityCount">0</div>
+                <div class="text-sm text-gray-600 font-medium">高優先級</div>
+                <div class="text-xs text-purple-600 mt-1">需關注</div>
+            </div>
+        </div>
+
+        <!-- 快速篩選器 -->
+        <div class="glass-effect rounded-2xl p-6 mb-8 border border-white/20">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-semibold text-gray-700">篩選:</label>
+                    <select 
+                        id="filterCategory"
+                        onchange="filterTodos()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/80"
+                    >
+                        <option value="">全部分類</option>
+                        <option value="工作">🏢 工作</option>
+                        <option value="個人">👤 個人</option>
+                        <option value="學習">📚 學習</option>
+                        <option value="健康">💪 健康</option>
+                        <option value="購物">🛒 購物</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-semibold text-gray-700">優先級:</label>
+                    <select 
+                        id="filterPriority"
+                        onchange="filterTodos()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/80"
+                    >
+                        <option value="">全部優先級</option>
+                        <option value="high">🔴 高</option>
+                        <option value="medium">🟡 中</option>
+                        <option value="low">🟢 低</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-semibold text-gray-700">狀態:</label>
+                    <select 
+                        id="filterStatus"
+                        onchange="filterTodos()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/80"
+                    >
+                        <option value="">全部狀態</option>
+                        <option value="pending">待完成</option>
+                        <option value="completed">已完成</option>
+                        <option value="overdue">已逾期</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-semibold text-gray-700">排序:</label>
+                    <select 
+                        id="sortBy"
+                        onchange="filterTodos()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/80"
+                    >
+                        <option value="created">建立時間</option>
+                        <option value="deadline">截止時間</option>
+                        <option value="priority">優先級</option>
+                        <option value="alphabetical">字母順序</option>
+                    </select>
+                </div>
+                
+                <button 
+                    onclick="clearFilters()"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                    清除篩選
+                </button>
+            </div>
+        </div>
+
+        <!-- 列表視圖 -->
+        <div id="listView" class="space-y-6">
+
+            <!-- 提醒事項列表 -->
+            <div class="glass-effect rounded-2xl overflow-hidden border border-white/20">
+                <div class="p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-white/20">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                        <span class="mr-2">📋</span>
+                        我的提醒事項
+                        <span class="ml-2 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold" id="listCounter">0</span>
+                    </h2>
+                </div>
+                <div id="todoList" class="divide-y divide-gray-100">
+                    <!-- 提醒事項會動態添加到這裡 -->
+                </div>
+                <div id="emptyState" class="p-12 text-center text-gray-500">
+                    <div class="text-8xl mb-6">📝</div>
+                    <h3 class="text-xl font-semibold mb-2">還沒有提醒事項</h3>
+                    <p class="text-gray-400 mb-6">開始新增你的第一個提醒事項吧！</p>
+                    <button 
+                        onclick="openAddTodoModal()"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+                    >
+                        立即新增
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 看板視圖 -->
+        <div id="kanbanView" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 待完成 -->
+                <div class="kanban-column rounded-2xl p-6 border border-white/20">
+                    <h3 class="text-lg font-bold text-orange-600 mb-4 flex items-center">
+                        <span class="mr-2">⏳</span>
+                        待完成
+                        <span class="ml-2 px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold" id="pendingKanbanCount">0</span>
+                    </h3>
+                    <div id="pendingColumn" class="space-y-4 min-h-96">
+                        <!-- 待完成的提醒事項 -->
+                    </div>
+                </div>
+                
+                <!-- 進行中 -->
+                <div class="kanban-column rounded-2xl p-6 border border-white/20">
+                    <h3 class="text-lg font-bold text-blue-600 mb-4 flex items-center">
+                        <span class="mr-2">🔄</span>
+                        進行中
+                        <span class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold" id="inProgressKanbanCount">0</span>
+                    </h3>
+                    <div id="inProgressColumn" class="space-y-4 min-h-96">
+                        <!-- 進行中的提醒事項 -->
+                    </div>
+                </div>
+                
+                <!-- 已完成 -->
+                <div class="kanban-column rounded-2xl p-6 border border-white/20">
+                    <h3 class="text-lg font-bold text-green-600 mb-4 flex items-center">
+                        <span class="mr-2">✅</span>
+                        已完成
+                        <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold" id="completedKanbanCount">0</span>
+                    </h3>
+                    <div id="completedColumn" class="space-y-4 min-h-96">
+                        <!-- 已完成的提醒事項 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮動新增按鈕 -->
+    <button 
+        onclick="openAddTodoModal()"
+        class="floating-action bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110"
+        title="新增提醒事項"
+    >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+    </button>
+
+    <!-- 新增提醒事項彈出視窗 -->
+    <div id="addTodoModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="p-8">
+                <!-- 標題列 -->
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <span class="mr-3">✨</span>
+                        新增提醒事項
+                    </h3>
+                    <button 
+                        onclick="closeAddTodoModal()"
+                        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        title="關閉"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- 表單內容 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                標題 <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="newTodoInput"
+                                placeholder="輸入提醒事項標題..."
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                onkeypress="handleKeyPress(event)"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">描述</label>
+                            <textarea 
+                                id="descriptionInput"
+                                placeholder="詳細描述（選填）..."
+                                rows="3"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80 resize-none"
+                            ></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">分類</label>
+                                <select 
+                                    id="categorySelect"
+                                    onchange="handleCategoryChange()"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                >
+                                    <option value="工作">🏢 工作</option>
+                                    <option value="個人">👤 個人</option>
+                                    <option value="學習">📚 學習</option>
+                                    <option value="健康">💪 健康</option>
+                                    <option value="購物">🛒 購物</option>
+                                    <option value="custom">✨ 自訂</option>
+                                </select>
+                                <input 
+                                    type="text" 
+                                    id="customCategoryInput"
+                                    placeholder="輸入自訂分類名稱..."
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80 mt-2 hidden"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">優先級</label>
+                                <select 
+                                    id="prioritySelect"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                >
+                                    <option value="medium">🟡 中等</option>
+                                    <option value="high">🔴 高</option>
+                                    <option value="low">🟢 低</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">開始日期</label>
+                                <input 
+                                    type="date" 
+                                    id="startDateInput"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">開始時間</label>
+                                <input 
+                                    type="time" 
+                                    id="startTimeInput"
+                                    value="09:00"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                >
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">截止日期</label>
+                                <input 
+                                    type="date" 
+                                    id="endDateInput"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">截止時間</label>
+                                <input 
+                                    type="time" 
+                                    id="endTimeInput"
+                                    value="18:00"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
+                                >
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button 
+                                onclick="closeAddTodoModal()"
+                                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                            >
+                                取消
+                            </button>
+                            <button 
+                                onclick="addTodo()"
+                                class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                            >
+                                <span>✨</span>
+                                <span>新增提醒事項</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let todos = [];
+        let nextId = 1;
+        let filteredTodos = [];
+        let currentView = 'list';
+        let searchQuery = '';
+
+        // 分類配置
+        const categoryConfig = {
+            '工作': { icon: '🏢', color: 'bg-blue-100 text-blue-800' },
+            '個人': { icon: '👤', color: 'bg-purple-100 text-purple-800' },
+            '學習': { icon: '📚', color: 'bg-green-100 text-green-800' },
+            '健康': { icon: '💪', color: 'bg-red-100 text-red-800' },
+            '購物': { icon: '🛒', color: 'bg-yellow-100 text-yellow-800' }
+        };
+
+        // 自訂分類
+        let customCategories = [];
+
+        // 優先級配置
+        const priorityConfig = {
+            'high': { icon: '🔴', label: '高', color: 'bg-red-100 text-red-800' },
+            'medium': { icon: '🟡', label: '中', color: 'bg-yellow-100 text-yellow-800' },
+            'low': { icon: '🟢', label: '低', color: 'bg-green-100 text-green-800' }
+        };
+
+        // 本地儲存
+        function saveToLocalStorage() {
+            const data = {
+                todos: todos.map(todo => ({
+                    ...todo,
+                    startDate: todo.startDate ? todo.startDate.toISOString() : null,
+                    endDate: todo.endDate ? todo.endDate.toISOString() : null,
+                    createdAt: todo.createdAt.toISOString()
+                })),
+                nextId: nextId,
+                customCategories: customCategories
+            };
+            localStorage.setItem('todoApp', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const data = localStorage.getItem('todoApp');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    todos = parsed.todos.map(todo => ({
+                        ...todo,
+                        startDate: todo.startDate ? new Date(todo.startDate) : null,
+                        endDate: todo.endDate ? new Date(todo.endDate) : null,
+                        createdAt: new Date(todo.createdAt)
+                    }));
+                    nextId = parsed.nextId || 1;
+                    customCategories = parsed.customCategories || [];
+                    updateCategoryOptions();
+                }
+            } catch (error) {
+                console.error('載入資料時發生錯誤:', error);
+            }
+        }
+
+        // 通知系統
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `p-4 rounded-lg shadow-lg mb-4 fade-in ${
+                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // 處理 Enter 鍵
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addTodo();
+            }
+        }
+
+        // 處理分類變更
+        function handleCategoryChange() {
+            const categorySelect = document.getElementById('categorySelect');
+            const customInput = document.getElementById('customCategoryInput');
+            
+            if (categorySelect.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        // 獲取分類資訊
+        function getCategoryInfo(category) {
+            if (categoryConfig[category]) {
+                return categoryConfig[category];
+            }
+            // 自訂分類使用預設樣式
+            return { icon: '📌', color: 'bg-gray-100 text-gray-800' };
+        }
+
+        // 更新分類選項
+        function updateCategoryOptions() {
+            const filterCategory = document.getElementById('filterCategory');
+            
+            // 清除現有的自訂分類選項
+            const existingCustomOptions = filterCategory.querySelectorAll('option[data-custom="true"]');
+            existingCustomOptions.forEach(option => option.remove());
+            
+            // 添加自訂分類到篩選器
+            customCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = `📌 ${category}`;
+                option.setAttribute('data-custom', 'true');
+                filterCategory.appendChild(option);
+            });
+        }
+
+        // 開啟新增提醒事項彈出視窗
+        function openAddTodoModal() {
+            const modal = document.getElementById('addTodoModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // 防止背景滾動
+            
+            // 聚焦到標題輸入框
+            setTimeout(() => {
+                document.getElementById('newTodoInput').focus();
+            }, 300);
+        }
+
+        // 關閉新增提醒事項彈出視窗
+        function closeAddTodoModal() {
+            const modal = document.getElementById('addTodoModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // 恢復背景滾動
+            
+            // 清空表單
+            resetAddTodoForm();
+        }
+
+        // 重置新增表單
+        function resetAddTodoForm() {
+            document.getElementById('newTodoInput').value = '';
+            document.getElementById('descriptionInput').value = '';
+            document.getElementById('categorySelect').value = '工作';
+            document.getElementById('customCategoryInput').value = '';
+            document.getElementById('customCategoryInput').classList.add('hidden');
+            document.getElementById('prioritySelect').value = 'medium';
+            document.getElementById('startDateInput').value = '';
+            document.getElementById('startTimeInput').value = '09:00';
+            document.getElementById('endDateInput').value = '';
+            document.getElementById('endTimeInput').value = '18:00';
+        }
+
+        // 點擊背景關閉彈出視窗
+        document.getElementById('addTodoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddTodoModal();
+            }
+        });
+
+        // ESC 鍵關閉彈出視窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('addTodoModal');
+                if (modal.classList.contains('active')) {
+                    closeAddTodoModal();
+                }
+            }
+        });
+
+        // 新增提醒事項
+        function addTodo() {
+            const input = document.getElementById('newTodoInput');
+            const description = document.getElementById('descriptionInput');
+            const categorySelect = document.getElementById('categorySelect');
+            const customCategoryInput = document.getElementById('customCategoryInput');
+            const priority = document.getElementById('prioritySelect').value;
+            const startDate = document.getElementById('startDateInput').value;
+            const startTime = document.getElementById('startTimeInput').value;
+            const endDate = document.getElementById('endDateInput').value;
+            const endTime = document.getElementById('endTimeInput').value;
+            
+            const text = input.value.trim();
+            
+            if (text === '') {
+                showNotification('請輸入提醒事項標題！', 'error');
+                input.focus();
+                return;
+            }
+
+            let category = categorySelect.value;
+            if (category === 'custom') {
+                const customCategory = customCategoryInput.value.trim();
+                if (customCategory === '') {
+                    showNotification('請輸入自訂分類名稱！', 'error');
+                    customCategoryInput.focus();
+                    return;
+                }
+                category = customCategory;
+                
+                // 添加到自訂分類列表
+                if (!customCategories.includes(category)) {
+                    customCategories.push(category);
+                    updateCategoryOptions();
+                }
+            }
+
+            let startDateTime = null;
+            let endDateTime = null;
+
+            if (startDate && startTime) {
+                startDateTime = new Date(`${startDate}T${startTime}`);
+            }
+
+            if (endDate && endTime) {
+                endDateTime = new Date(`${endDate}T${endTime}`);
+            }
+
+            if (startDateTime && endDateTime && startDateTime >= endDateTime) {
+                showNotification('開始時間必須早於結束時間！', 'error');
+                return;
+            }
+
+            const todo = {
+                id: nextId++,
+                text: text,
+                description: description.value.trim(),
+                category: category,
+                priority: priority,
+                startDate: startDateTime,
+                endDate: endDateTime,
+                completed: false,
+                status: 'pending', // pending, in-progress, completed
+                createdAt: new Date()
+            };
+
+            todos.push(todo);
+            saveToLocalStorage();
+            
+            // 關閉彈出視窗
+            closeAddTodoModal();
+            
+            filterTodos();
+            updateStats();
+            showNotification(`已成功新增「${text}」！`);
+        }
+
+        // 切換完成狀態
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                todo.status = todo.completed ? 'completed' : 'pending';
+                saveToLocalStorage();
+                filterTodos();
+                updateStats();
+                
+                const status = todo.completed ? '已完成' : '待完成';
+                showNotification(`「${todo.text}」已標記為${status}`);
+            }
+        }
+
+        // 更新狀態
+        function updateTodoStatus(id, newStatus) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.status = newStatus;
+                if (newStatus === 'completed') {
+                    todo.completed = true;
+                } else {
+                    todo.completed = false;
+                }
+                saveToLocalStorage();
+                filterTodos();
+                updateStats();
+                
+                const statusText = {
+                    'pending': '待完成',
+                    'in-progress': '進行中',
+                    'completed': '已完成'
+                };
+                showNotification(`「${todo.text}」狀態已更新為${statusText[newStatus]}`);
+            }
+        }
+
+        // 刪除提醒事項
+        function deleteTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (!todo) return;
+            
+            if (confirm(`確定要刪除「${todo.text}」嗎？`)) {
+                todos = todos.filter(t => t.id !== id);
+                saveToLocalStorage();
+                filterTodos();
+                updateStats();
+                showNotification(`已刪除「${todo.text}」`);
+            }
+        }
+
+        // 複製提醒事項
+        function duplicateTodo(id) {
+            const originalTodo = todos.find(t => t.id === id);
+            if (originalTodo) {
+                const newTodo = {
+                    ...originalTodo,
+                    id: nextId++,
+                    text: originalTodo.text + ' (副本)',
+                    completed: false,
+                    status: 'pending',
+                    createdAt: new Date()
+                };
+                
+                todos.push(newTodo);
+                saveToLocalStorage();
+                filterTodos();
+                updateStats();
+                showNotification(`已複製「${originalTodo.text}」`);
+            }
+        }
+
+        // 獲取狀態
+        function getTodoStatus(todo) {
+            if (todo.completed) return 'completed';
+            if (!todo.endDate) return 'pending';
+            
+            const now = new Date();
+            const endDate = new Date(todo.endDate);
+            const diffTime = endDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return 'overdue';
+            if (diffDays <= 1) return 'due-soon';
+            return 'pending';
+        }
+
+        // 搜尋功能
+        function searchTodos() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            searchQuery = searchInput.value.toLowerCase().trim();
+            
+            // 顯示或隱藏清除按鈕
+            if (searchQuery) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            
+            filterTodos();
+        }
+
+        // 清除搜尋
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            searchQuery = '';
+            filterTodos();
+        }
+
+        // 高亮搜尋結果
+        function highlightText(text, query) {
+            if (!query || !text) return text;
+            const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        // 轉義正則表達式特殊字符
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 篩選和排序
+        function filterTodos() {
+            const categoryFilter = document.getElementById('filterCategory').value;
+            const priorityFilter = document.getElementById('filterPriority').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            filteredTodos = todos.filter(todo => {
+                const matchCategory = !categoryFilter || todo.category === categoryFilter;
+                const matchPriority = !priorityFilter || todo.priority === priorityFilter;
+                const todoStatus = getTodoStatus(todo);
+                const matchStatus = !statusFilter || todoStatus === statusFilter;
+                const matchSearch = !searchQuery || 
+                    todo.text.toLowerCase().includes(searchQuery) ||
+                    (todo.description && todo.description.toLowerCase().includes(searchQuery)) ||
+                    todo.category.toLowerCase().includes(searchQuery);
+                
+                return matchCategory && matchPriority && matchStatus && matchSearch;
+            });
+            
+            // 排序
+            filteredTodos.sort((a, b) => {
+                switch (sortBy) {
+                    case 'deadline':
+                        if (!a.endDate && !b.endDate) return 0;
+                        if (!a.endDate) return 1;
+                        if (!b.endDate) return -1;
+                        return new Date(a.endDate) - new Date(b.endDate);
+                    case 'priority':
+                        const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                        return priorityOrder[b.priority] - priorityOrder[a.priority];
+                    case 'alphabetical':
+                        return a.text.localeCompare(b.text);
+                    default: // created
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+            });
+            
+            if (currentView === 'list') {
+                renderTodoList();
+            } else {
+                renderKanbanView();
+            }
+        }
+
+        // 清除篩選
+        function clearFilters() {
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterPriority').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('sortBy').value = 'created';
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            filterTodos();
+            showNotification('已清除所有篩選條件');
+        }
+
+        // 格式化日期時間
+        function formatDateTime(date) {
+            if (!date) return '';
+            return new Date(date).toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        // 獲取相對時間
+        function getRelativeTime(date) {
+            if (!date) return '';
+            const now = new Date();
+            const diffTime = new Date(date) - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return `逾期 ${Math.abs(diffDays)} 天`;
+            if (diffDays === 0) return '今天到期';
+            if (diffDays === 1) return '明天到期';
+            if (diffDays <= 7) return `${diffDays} 天後到期`;
+            return `${Math.ceil(diffDays / 7)} 週後到期`;
+        }
+
+        // 渲染列表視圖
+        function renderTodoList() {
+            const todoList = document.getElementById('todoList');
+            const emptyState = document.getElementById('emptyState');
+            const listCounter = document.getElementById('listCounter');
+            
+            listCounter.textContent = filteredTodos.length;
+            
+            if (filteredTodos.length === 0) {
+                todoList.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            todoList.innerHTML = filteredTodos.map(todo => {
+                const status = getTodoStatus(todo);
+                const priorityClass = `priority-${todo.priority}`;
+                const categoryInfo = getCategoryInfo(todo.category);
+                const priorityInfo = priorityConfig[todo.priority];
+                
+                return `
+                <div class="p-6 hover:bg-gray-50/50 transition-all duration-200 fade-in ${priorityClass}" data-id="${todo.id}">
+                    <div class="flex items-start gap-4">
+                        <!-- 完成勾選框 -->
+                        <button 
+                            onclick="toggleTodo(${todo.id})"
+                            class="w-7 h-7 rounded-full border-2 ${todo.completed ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-green-400'} flex items-center justify-center transition-all duration-200 mt-1 flex-shrink-0"
+                        >
+                            ${todo.completed ? '<span class="text-white text-sm">✓</span>' : ''}
+                        </button>
+                        
+                        <!-- 主要內容 -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-lg font-semibold text-gray-800 ${todo.completed ? 'completed' : ''} mb-1">
+                                        ${highlightText(todo.text, searchQuery)}
+                                    </h4>
+                                    ${todo.description ? `<p class="text-gray-600 text-sm ${todo.completed ? 'completed' : ''}">${highlightText(todo.description, searchQuery)}</p>` : ''}
+                                </div>
+                                <div class="flex items-center gap-2 ml-4 flex-shrink-0">
+                                    <span class="category-badge ${categoryInfo.color}">
+                                        ${categoryInfo.icon} ${todo.category}
+                                    </span>
+                                    <span class="category-badge ${priorityInfo.color}">
+                                        ${priorityInfo.icon} ${priorityInfo.label}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- 時間資訊 -->
+                            <div class="flex flex-wrap gap-4 text-xs text-gray-500 mb-3">
+                                ${todo.startDate ? `<span class="flex items-center gap-1"><span>🚀</span> 開始: ${formatDateTime(todo.startDate)}</span>` : ''}
+                                ${todo.endDate ? `<span class="flex items-center gap-1"><span>⏰</span> 截止: ${formatDateTime(todo.endDate)}</span>` : ''}
+                                <span class="flex items-center gap-1"><span>📅</span> 建立: ${formatDateTime(todo.createdAt)}</span>
+                            </div>
+                            
+                            <!-- 狀態指示 -->
+                            <div class="flex items-center gap-2 mb-3">
+                                ${status === 'overdue' ? '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">⚠️ 已逾期</span>' : ''}
+                                ${status === 'due-soon' ? '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">⏳ 即將到期</span>' : ''}
+                                ${todo.endDate ? `<span class="text-xs text-gray-500">${getRelativeTime(todo.endDate)}</span>` : ''}
+                            </div>
+                            
+                            <!-- 狀態切換按鈕 -->
+                            <div class="flex items-center gap-2">
+                                <select 
+                                    onchange="updateTodoStatus(${todo.id}, this.value)"
+                                    class="px-3 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                >
+                                    <option value="pending" ${todo.status === 'pending' ? 'selected' : ''}>⏳ 待完成</option>
+                                    <option value="in-progress" ${todo.status === 'in-progress' ? 'selected' : ''}>🔄 進行中</option>
+                                    <option value="completed" ${todo.status === 'completed' ? 'selected' : ''}>✅ 已完成</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- 操作按鈕 -->
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button 
+                                onclick="duplicateTodo(${todo.id})"
+                                class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                title="複製"
+                            >
+                                📋
+                            </button>
+                            <button 
+                                onclick="deleteTodo(${todo.id})"
+                                class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                title="刪除"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // 渲染看板視圖
+        function renderKanbanView() {
+            const pendingColumn = document.getElementById('pendingColumn');
+            const inProgressColumn = document.getElementById('inProgressColumn');
+            const completedColumn = document.getElementById('completedColumn');
+            
+            const pendingTodos = filteredTodos.filter(t => t.status === 'pending');
+            const inProgressTodos = filteredTodos.filter(t => t.status === 'in-progress');
+            const completedTodos = filteredTodos.filter(t => t.status === 'completed');
+            
+            document.getElementById('pendingKanbanCount').textContent = pendingTodos.length;
+            document.getElementById('inProgressKanbanCount').textContent = inProgressTodos.length;
+            document.getElementById('completedKanbanCount').textContent = completedTodos.length;
+            
+            function renderKanbanCard(todo) {
+                const status = getTodoStatus(todo);
+                const categoryInfo = getCategoryInfo(todo.category);
+                const priorityInfo = priorityConfig[todo.priority];
+                
+                return `
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer" data-id="${todo.id}">
+                    <div class="flex items-start justify-between mb-3">
+                        <h4 class="font-semibold text-gray-800 text-sm leading-tight flex-1">
+                            ${highlightText(todo.text, searchQuery)}
+                        </h4>
+                        <div class="flex gap-1 ml-2">
+                            <button 
+                                onclick="deleteTodo(${todo.id})"
+                                class="text-gray-400 hover:text-red-500 transition-colors"
+                                title="刪除"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${todo.description ? `<p class="text-gray-600 text-xs mb-3 line-clamp-2">${highlightText(todo.description, searchQuery)}</p>` : ''}
+                    
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-1 ${categoryInfo.color} rounded-full text-xs font-medium">
+                            ${categoryInfo.icon} ${todo.category}
+                        </span>
+                        <span class="px-2 py-1 ${priorityInfo.color} rounded-full text-xs font-medium">
+                            ${priorityInfo.icon}
+                        </span>
+                    </div>
+                    
+                    ${todo.endDate ? `
+                    <div class="text-xs text-gray-500 mb-2">
+                        ⏰ ${getRelativeTime(todo.endDate)}
+                    </div>
+                    ` : ''}
+                    
+                    ${status === 'overdue' ? '<div class="text-xs text-red-600 font-medium">⚠️ 已逾期</div>' : ''}
+                    ${status === 'due-soon' ? '<div class="text-xs text-yellow-600 font-medium">⏳ 即將到期</div>' : ''}
+                    
+                    <div class="flex gap-1 mt-3">
+                        ${todo.status !== 'pending' ? `<button onclick="updateTodoStatus(${todo.id}, 'pending')" class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs hover:bg-orange-200 transition-colors">待完成</button>` : ''}
+                        ${todo.status !== 'in-progress' ? `<button onclick="updateTodoStatus(${todo.id}, 'in-progress')" class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200 transition-colors">進行中</button>` : ''}
+                        ${todo.status !== 'completed' ? `<button onclick="updateTodoStatus(${todo.id}, 'completed')" class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs hover:bg-green-200 transition-colors">完成</button>` : ''}
+                    </div>
+                </div>
+                `;
+            }
+            
+            pendingColumn.innerHTML = pendingTodos.map(renderKanbanCard).join('');
+            inProgressColumn.innerHTML = inProgressTodos.map(renderKanbanCard).join('');
+            completedColumn.innerHTML = completedTodos.map(renderKanbanCard).join('');
+        }
+
+        // 切換視圖
+        function switchView(view) {
+            currentView = view;
+            const listView = document.getElementById('listView');
+            const kanbanView = document.getElementById('kanbanView');
+            const listBtn = document.getElementById('listViewBtn');
+            const kanbanBtn = document.getElementById('kanbanViewBtn');
+            
+            if (view === 'list') {
+                listView.classList.remove('hidden');
+                kanbanView.classList.add('hidden');
+                listBtn.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
+                listBtn.classList.remove('text-gray-600', 'hover:text-indigo-600');
+                kanbanBtn.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
+                kanbanBtn.classList.add('text-gray-600', 'hover:text-indigo-600');
+                renderTodoList();
+            } else {
+                listView.classList.add('hidden');
+                kanbanView.classList.remove('hidden');
+                kanbanBtn.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
+                kanbanBtn.classList.remove('text-gray-600', 'hover:text-indigo-600');
+                listBtn.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
+                listBtn.classList.add('text-gray-600', 'hover:text-indigo-600');
+                renderKanbanView();
+            }
+        }
+
+
+
+        // 更新統計資訊
+        function updateStats() {
+            const total = todos.length;
+            const completed = todos.filter(t => t.completed).length;
+            const pending = todos.filter(t => !t.completed).length;
+            const overdue = todos.filter(t => getTodoStatus(t) === 'overdue').length;
+            const highPriority = todos.filter(t => t.priority === 'high').length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('overdueCount').textContent = overdue;
+            document.getElementById('highPriorityCount').textContent = highPriority;
+
+            // 更新百分比
+            const completedPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const pendingPercent = total > 0 ? Math.round((pending / total) * 100) : 0;
+            const overduePercent = total > 0 ? Math.round((overdue / total) * 100) : 0;
+
+            document.getElementById('completedPercent').textContent = `${completedPercent}%`;
+            document.getElementById('pendingPercent').textContent = `${pendingPercent}%`;
+            document.getElementById('overduePercent').textContent = `${overduePercent}%`;
+
+            // 更新進度環
+            const progressCircle = document.getElementById('totalProgress');
+            const circumference = 2 * Math.PI * 28;
+            const progress = total > 0 ? (completed / total) * circumference : 0;
+            progressCircle.style.strokeDashoffset = circumference - progress;
+        }
+
+        // 初始化
+        function init() {
+            loadFromLocalStorage();
+            
+            // 設置今天的日期為預設開始日期
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDateInput').value = today;
+            document.getElementById('endDateInput').value = today;
+            
+            filterTodos();
+            updateStats();
+            
+            showNotification('歡迎使用提醒事項 v4.0！', 'info');
+        }
+
+        // 啟動應用程式
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9769e52d827bf1bc',t:'MTc1NjQ0NzkzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
