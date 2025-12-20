@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>質因數分解計算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .factor-animation {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .pulse-animation {
+            animation: pulse 0.5s ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- 標題 -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-white mb-2">質因數分解計算器</h1>
+                <p class="text-blue-100">輸入任何正整數，立即獲得完整的質因數分解</p>
+            </div>
+
+            <!-- 輸入區域 -->
+            <div class="bg-white rounded-2xl shadow-2xl p-8 mb-6">
+                <form id="factorForm" class="space-y-6">
+                    <div>
+                        <label for="numberInput" class="block text-lg font-semibold text-gray-700 mb-3">
+                            請輸入要分解的數字：
+                        </label>
+                        <input 
+                            type="number" 
+                            id="numberInput" 
+                            min="2" 
+                            max="1000000"
+                            placeholder="例如：60"
+                            class="w-full px-4 py-3 text-xl border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 outline-none"
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                    >
+                        🔍 開始分解
+                    </button>
+                </form>
+            </div>
+
+            <!-- 結果顯示區域 -->
+            <div id="resultContainer" class="hidden bg-white rounded-2xl shadow-2xl p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">分解結果</h2>
+                
+                <!-- 原數字顯示 -->
+                <div id="originalNumber" class="text-center mb-6">
+                    <span class="text-lg text-gray-600">原數字：</span>
+                    <span id="inputNumber" class="text-2xl font-bold text-purple-600"></span>
+                </div>
+
+                <!-- 質因數列表 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">質因數：</h3>
+                    <div id="primeFactors" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- 分解過程 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">分解過程：</h3>
+                    <div id="factorProcess" class="bg-gray-50 rounded-lg p-4 font-mono text-sm"></div>
+                </div>
+
+                <!-- 數學表達式 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">數學表達式：</h3>
+                    <div id="mathExpression" class="bg-blue-50 rounded-lg p-4 text-center text-lg font-semibold text-blue-800"></div>
+                </div>
+
+                <!-- 統計信息 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600" id="uniqueFactors">0</div>
+                        <div class="text-sm text-green-700">不同質因數</div>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-orange-600" id="totalFactors">0</div>
+                        <div class="text-sm text-orange-700">總因數個數</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600" id="isPrime">-</div>
+                        <div class="text-sm text-purple-700">是否為質數</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 範例區域 -->
+            <div class="mt-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">💡 試試這些範例：</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="setExample(60)" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all duration-200">60</button>
+                    <button onclick="setExample(100)" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all duration-200">100</button>
+                    <button onclick="setExample(315)" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all duration-200">315</button>
+                    <button onclick="setExample(1024)" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all duration-200">1024</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 質因數分解函數
+        function primeFactorization(n) {
+            const factors = [];
+            const process = [];
+            let current = n;
+            
+            // 處理因數2
+            while (current % 2 === 0) {
+                factors.push(2);
+                process.push(`${current} ÷ 2 = ${current / 2}`);
+                current = current / 2;
+            }
+            
+            // 處理奇數因數
+            for (let i = 3; i <= Math.sqrt(current); i += 2) {
+                while (current % i === 0) {
+                    factors.push(i);
+                    process.push(`${current} ÷ ${i} = ${current / i}`);
+                    current = current / i;
+                }
+            }
+            
+            // 如果剩餘的數大於2，它本身就是質數
+            if (current > 2) {
+                factors.push(current);
+            }
+            
+            return { factors, process };
+        }
+
+        // 計算因數的指數表示
+        function getFactorExpression(factors) {
+            const factorCount = {};
+            factors.forEach(factor => {
+                factorCount[factor] = (factorCount[factor] || 0) + 1;
+            });
+            
+            const expression = Object.entries(factorCount)
+                .map(([factor, count]) => count === 1 ? factor : `${factor}^${count}`)
+                .join(' × ');
+                
+            return expression;
+        }
+
+        // 設置範例數字
+        function setExample(number) {
+            document.getElementById('numberInput').value = number;
+            document.getElementById('numberInput').classList.add('pulse-animation');
+            setTimeout(() => {
+                document.getElementById('numberInput').classList.remove('pulse-animation');
+            }, 500);
+        }
+
+        // 顯示結果
+        function displayResults(number, result) {
+            const { factors, process } = result;
+            
+            // 顯示原數字
+            document.getElementById('inputNumber').textContent = number;
+            
+            // 顯示質因數
+            const primeFactorsContainer = document.getElementById('primeFactors');
+            primeFactorsContainer.innerHTML = '';
+            factors.forEach((factor, index) => {
+                const factorElement = document.createElement('span');
+                factorElement.className = 'bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold factor-animation';
+                factorElement.textContent = factor;
+                factorElement.style.animationDelay = `${index * 0.1}s`;
+                primeFactorsContainer.appendChild(factorElement);
+            });
+            
+            // 顯示分解過程
+            const processContainer = document.getElementById('factorProcess');
+            processContainer.innerHTML = process.length > 0 ? process.join('<br>') : '該數字本身就是質數';
+            
+            // 顯示數學表達式
+            const expression = getFactorExpression(factors);
+            document.getElementById('mathExpression').textContent = `${number} = ${expression}`;
+            
+            // 顯示統計信息
+            const uniqueFactors = new Set(factors).size;
+            document.getElementById('uniqueFactors').textContent = uniqueFactors;
+            document.getElementById('totalFactors').textContent = factors.length;
+            document.getElementById('isPrime').textContent = factors.length === 1 ? '是' : '否';
+            
+            // 顯示結果容器
+            document.getElementById('resultContainer').classList.remove('hidden');
+            document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 表單提交處理
+        document.getElementById('factorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const input = document.getElementById('numberInput');
+            const number = parseInt(input.value);
+            
+            if (!number || number < 2) {
+                alert('請輸入大於等於2的正整數！');
+                return;
+            }
+            
+            if (number > 1000000) {
+                alert('為了計算效率，請輸入小於等於1,000,000的數字！');
+                return;
+            }
+            
+            const result = primeFactorization(number);
+            displayResults(number, result);
+        });
+
+        // 輸入框回車鍵處理
+        document.getElementById('numberInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('factorForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'987a9ae3e303f1ec',t:'MTc1OTMwNzUwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
