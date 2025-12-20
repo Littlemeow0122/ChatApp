@@ -13,3 +13,6 @@ URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%99%BA
 # 質因數計算
 Google Drive : https://drive.google.com/file/d/1Yq5L3xkqA39ityyhJokBmLt-ljqbGGCL/view?usp=share_link  
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/質因數計算.html
+# 提醒事項
+Google Drive : https://drive.google.com/file/d/1-7PUNwXDfEy1zwNj41otmhhwnXHCc4VM/view?usp=share_link  
+URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%8F%90%E9%86%92%E4%BA%8B%E9%A0%85.html
