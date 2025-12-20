@@ -10,3 +10,6 @@ URL : https://raw.githack.com/Littlemeow0122/HTML-Work/main/%E9%AD%94%E6%B3%95%E
 # 智能翻譯器
 Google Drive : https://drive.google.com/file/d/1uDPSniaKNqhGQHg42kuRynwnn-tBgNh2/view?usp=share_link  
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%99%BA%E8%83%BD%E7%BF%BB%E8%AD%AF%E5%99%A8.html
+# 質因數計算
+Google Drive : https://drive.google.com/file/d/1Yq5L3xkqA39ityyhJokBmLt-ljqbGGCL/view?usp=share_link  
+URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/質因數計算.html
