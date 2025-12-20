@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萬能單位換算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { 
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .category-card:hover { transform: translateY(-2px); transition: all 0.3s ease; }
+        .input-focus:focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🔄 萬能單位換算器</h1>
+            <p class="text-white/80 text-lg">快速準確的單位轉換工具</p>
+        </div>
+
+        <!-- Category Selection -->
+        <div class="glass-effect rounded-2xl p-6 mb-8">
+            <h2 class="text-xl font-semibold text-white mb-4">選擇換算類別</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <button onclick="selectCategory('length')" class="category-card bg-blue-500/20 hover:bg-blue-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">📐</div>
+                    <div class="text-sm font-medium">長度</div>
+                </button>
+                <button onclick="selectCategory('mass')" class="category-card bg-green-500/20 hover:bg-green-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">⚖️</div>
+                    <div class="text-sm font-medium">質量/重量</div>
+                </button>
+                <button onclick="selectCategory('volume')" class="category-card bg-purple-500/20 hover:bg-purple-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">🧪</div>
+                    <div class="text-sm font-medium">容積/體積</div>
+                </button>
+                <button onclick="selectCategory('temperature')" class="category-card bg-red-500/20 hover:bg-red-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">🌡️</div>
+                    <div class="text-sm font-medium">溫度</div>
+                </button>
+                <button onclick="selectCategory('energy')" class="category-card bg-yellow-500/20 hover:bg-yellow-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">⚡</div>
+                    <div class="text-sm font-medium">能量</div>
+                </button>
+                <button onclick="selectCategory('speed')" class="category-card bg-indigo-500/20 hover:bg-indigo-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">🚗</div>
+                    <div class="text-sm font-medium">速度</div>
+                </button>
+                <button onclick="selectCategory('electrical')" class="category-card bg-orange-500/20 hover:bg-orange-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">🔋</div>
+                    <div class="text-sm font-medium">電學單位</div>
+                </button>
+                <button onclick="selectCategory('currency')" class="category-card bg-pink-500/20 hover:bg-pink-500/30 text-white p-4 rounded-xl text-center transition-all duration-300">
+                    <div class="text-2xl mb-2">💰</div>
+                    <div class="text-sm font-medium">貨幣</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Converter Interface -->
+        <div id="converterInterface" class="glass-effect rounded-2xl p-6 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="categoryTitle" class="text-2xl font-semibold text-white"></h2>
+                <button onclick="clearAll()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
+                    🗑️ 清除
+                </button>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- From Unit -->
+                <div class="space-y-4">
+                    <label class="block text-white font-medium">從</label>
+                    <select id="fromUnit" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white input-focus" onchange="convert()">
+                    </select>
+                    <input id="fromValue" type="number" placeholder="輸入數值" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/60 input-focus" oninput="convert()">
+                </div>
+
+                <!-- To Unit -->
+                <div class="space-y-4">
+                    <label class="block text-white font-medium">轉換為</label>
+                    <select id="toUnit" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white input-focus" onchange="convert()">
+                    </select>
+                    <input id="toValue" type="number" placeholder="轉換結果" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/60 input-focus" readonly>
+                </div>
+            </div>
+
+            <!-- Quick Convert Buttons -->
+            <div id="quickButtons" class="mt-6 flex flex-wrap gap-2"></div>
+
+            <!-- Currency Notice -->
+            <div id="currencyNotice" class="mt-4 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-100 text-sm hidden">
+                💡 貨幣匯率為示範數據，實際匯率請參考金融機構資訊
+            </div>
+
+            <!-- Refresh Rate Button -->
+            <div id="refreshRateButton" class="mt-4 text-center hidden">
+                <button onclick="refreshExchangeRates()" class="bg-green-500/20 hover:bg-green-500/30 text-white px-4 py-2 rounded-lg transition-colors">
+                    🔄 刷新匯率
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-white/60">
+            <p>萬能單位換算器 - 讓換算變得簡單</p>
+        </div>
+    </div>
+
+    <script>
+        // 單位定義和轉換係數
+        const units = {
+            length: {
+                title: '📐 長度換算',
+                units: {
+                    'm': { name: '公尺 (m)', factor: 1 },
+                    'cm': { name: '公分 (cm)', factor: 0.01 },
+                    'mm': { name: '毫米 (mm)', factor: 0.001 },
+                    'inch': { name: '英吋 (inch)', factor: 0.0254 },
+                    'ft': { name: '英尺 (ft)', factor: 0.3048 },
+                    'yard': { name: '碼 (yard)', factor: 0.9144 },
+                    'mile': { name: '哩 (mile)', factor: 1609.344 },
+                    'nautical_mile': { name: '海里 (nautical mile)', factor: 1852 }
+                }
+            },
+            mass: {
+                title: '⚖️ 質量/重量換算',
+                units: {
+                    'g': { name: '公克 (g)', factor: 1 },
+                    'kg': { name: '千克 (kg)', factor: 1000 },
+                    'mg': { name: '毫克 (mg)', factor: 0.001 },
+                    't': { name: '公噸 (t)', factor: 1000000 },
+                    'lb': { name: '英磅 (lb)', factor: 453.592 },
+                    'oz': { name: '盎司 (oz)', factor: 28.3495 },
+                    'short_ton': { name: '英噸 (short ton)', factor: 907185 }
+                }
+            },
+            volume: {
+                title: '🧪 容積/體積換算',
+                units: {
+                    'L': { name: '公升 (L)', factor: 1 },
+                    'mL': { name: '毫升 (mL)', factor: 0.001 },
+                    'm3': { name: '立方公尺 (m³)', factor: 1000 },
+                    'cm3': { name: '立方公分 (cm³)', factor: 0.001 },
+                    'uk_gallon': { name: '英加侖 (UK gallon)', factor: 4.546 },
+                    'us_gallon': { name: '美加侖 (US gallon)', factor: 3.785 },
+                    'pint': { name: '品脫 (pint)', factor: 0.568 },
+                    'cup': { name: '杯 (cup)', factor: 0.237 }
+                }
+            },
+            temperature: {
+                title: '🌡️ 溫度換算',
+                special: true,
+                units: {
+                    'celsius': { name: '攝氏 (°C)' },
+                    'fahrenheit': { name: '華氏 (°F)' },
+                    'kelvin': { name: '絕對溫標 (K)' },
+                    'rankine': { name: 'Rankine (°R)' }
+                }
+            },
+            energy: {
+                title: '⚡ 能量換算',
+                units: {
+                    'J': { name: '焦耳 (J)', factor: 1 },
+                    'kJ': { name: '千焦 (kJ)', factor: 1000 },
+                    'cal': { name: '卡路里 (cal)', factor: 4.184 },
+                    'kcal': { name: '大卡 (kcal)', factor: 4184 },
+                    'btu': { name: '英制熱量單位 (BTU)', factor: 1055.06 }
+                }
+            },
+            speed: {
+                title: '🚗 速度換算',
+                units: {
+                    'ms': { name: '公尺/秒 (m/s)', factor: 1 },
+                    'kmh': { name: '公里/小時 (km/h)', factor: 0.2778 },
+                    'mph': { name: '英哩/小時 (mph)', factor: 0.4470 },
+                    'knot': { name: '節 (knot)', factor: 0.5144 }
+                }
+            },
+            electrical: {
+                title: '🔋 電學單位換算',
+                units: {
+                    'V': { name: '伏特 (V)', factor: 1 },
+                    'mV': { name: '毫伏 (mV)', factor: 0.001 },
+                    'kV': { name: '千伏 (kV)', factor: 1000 },
+                    'A': { name: '安培 (A)', factor: 1 },
+                    'mA': { name: '毫安 (mA)', factor: 0.001 },
+                    'ohm': { name: '歐姆 (Ω)', factor: 1 },
+                    'W': { name: '瓦特 (W)', factor: 1 },
+                    'kW': { name: '千瓦 (kW)', factor: 1000 }
+                }
+            },
+            currency: {
+                title: '💰 貨幣換算',
+                special: true,
+                units: {
+                    'USD': { name: '美元 (USD)', rate: 1 },
+                    'EUR': { name: '歐元 (EUR)', rate: 1 },
+                    'JPY': { name: '日圓 (JPY)', rate: 1 },
+                    'CNY': { name: '人民幣 (CNY)', rate: 1 },
+                    'TWD': { name: '新台幣 (TWD)', rate: 1 },
+                    'GBP': { name: '英鎊 (GBP)', rate: 1 },
+                    'KRW': { name: '韓圓 (KRW)', rate: 1 },
+                    'HKD': { name: '港幣 (HKD)', rate: 1 },
+                    'SGD': { name: '新加坡幣 (SGD)', rate: 1 },
+                    'AUD': { name: '澳幣 (AUD)', rate: 1 },
+                    'CAD': { name: '加幣 (CAD)', rate: 1 },
+                    'CHF': { name: '瑞士法郎 (CHF)', rate: 1 }
+                }
+            }
+        };
+        // API!!!請誤動!!!
+        let currentCategory = null;
+        const API_KEY = '17ff54a0330df529555923fd';
+        let exchangeRates = {};
+        let lastRateUpdate = null;
+
+        // 載入即時匯率
+        async function loadExchangeRates() {
+            try {
+                const response = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`);
+                const data = await response.json();
+                
+                if (data.result === 'success') {
+                    exchangeRates = data.conversion_rates;
+                    lastRateUpdate = new Date();
+                    updateCurrencyNotice();
+                    return true;
+                }
+            } catch (error) {
+                console.error('載入匯率失敗:', error);
+                showRateError();
+            }
+            return false;
+        }
+
+        function updateCurrencyNotice() {
+            const notice = document.getElementById('currencyNotice');
+            if (lastRateUpdate) {
+                const timeStr = lastRateUpdate.toLocaleString('zh-TW');
+                notice.innerHTML = `💡 匯率更新時間: ${timeStr} (數據來源: ExchangeRate-API)`;
+            }
+        }
+
+        function showRateError() {
+            const notice = document.getElementById('currencyNotice');
+            notice.innerHTML = `⚠️ 無法載入即時匯率，使用預設匯率進行換算`;
+            notice.className = notice.className.replace('yellow-500', 'red-500');
+        }
+
+        function selectCategory(category) {
+            currentCategory = category;
+            const categoryData = units[category];
+            
+            document.getElementById('categoryTitle').textContent = categoryData.title;
+            document.getElementById('converterInterface').classList.remove('hidden');
+            
+            // 填充單位選項
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            
+            fromUnit.innerHTML = '';
+            toUnit.innerHTML = '';
+            
+            Object.keys(categoryData.units).forEach(key => {
+                const unit = categoryData.units[key];
+                fromUnit.innerHTML += `<option value="${key}">${unit.name}</option>`;
+                toUnit.innerHTML += `<option value="${key}">${unit.name}</option>`;
+            });
+            
+            // 設置默認選項
+            if (toUnit.children.length > 1) {
+                toUnit.selectedIndex = 1;
+            }
+            
+            // 顯示貨幣提示並載入匯率
+            const currencyNotice = document.getElementById('currencyNotice');
+            const refreshButton = document.getElementById('refreshRateButton');
+            if (category === 'currency') {
+                currencyNotice.classList.remove('hidden');
+                refreshButton.classList.remove('hidden');
+                currencyNotice.className = 'mt-4 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-100 text-sm';
+                currencyNotice.innerHTML = '🔄 正在載入即時匯率...';
+                loadExchangeRates();
+            } else {
+                currencyNotice.classList.add('hidden');
+                refreshButton.classList.add('hidden');
+            }
+            
+            // 生成快速轉換按鈕
+            generateQuickButtons(category);
+            
+            // 清除輸入
+            document.getElementById('fromValue').value = '';
+            document.getElementById('toValue').value = '';
+        }
+
+        function generateQuickButtons(category) {
+            const quickButtons = document.getElementById('quickButtons');
+            quickButtons.innerHTML = '';
+            
+            const commonValues = {
+                length: [1, 10, 100, 1000],
+                mass: [1, 100, 1000],
+                volume: [1, 10, 100, 1000],
+                temperature: [0, 25, 100],
+                energy: [1, 100, 1000],
+                speed: [1, 10, 60, 100],
+                electrical: [1, 12, 110, 220],
+                currency: [1, 10, 100, 1000]
+            };
+            
+            if (commonValues[category]) {
+                commonValues[category].forEach(value => {
+                    const button = document.createElement('button');
+                    button.className = 'bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-sm transition-colors';
+                    button.textContent = value;
+                    button.onclick = () => {
+                        document.getElementById('fromValue').value = value;
+                        convert();
+                    };
+                    quickButtons.appendChild(button);
+                });
+            }
+        }
+
+        function convert() {
+            const fromValue = parseFloat(document.getElementById('fromValue').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const toValueInput = document.getElementById('toValue');
+            
+            if (isNaN(fromValue) || fromValue === '') {
+                toValueInput.value = '';
+                return;
+            }
+            
+            const categoryData = units[currentCategory];
+            let result;
+            
+            if (currentCategory === 'temperature') {
+                result = convertTemperature(fromValue, fromUnit, toUnit);
+            } else if (currentCategory === 'currency') {
+                result = convertCurrency(fromValue, fromUnit, toUnit);
+            } else {
+                // 標準單位轉換
+                const fromFactor = categoryData.units[fromUnit].factor;
+                const toFactor = categoryData.units[toUnit].factor;
+                result = (fromValue * fromFactor) / toFactor;
+            }
+            
+            toValueInput.value = result.toFixed(6).replace(/\.?0+$/, '');
+        }
+
+        function convertTemperature(value, from, to) {
+            // 先轉換為攝氏度
+            let celsius;
+            switch (from) {
+                case 'celsius': celsius = value; break;
+                case 'fahrenheit': celsius = (value - 32) * 5/9; break;
+                case 'kelvin': celsius = value - 273.15; break;
+                case 'rankine': celsius = (value - 491.67) * 5/9; break;
+            }
+            
+            // 從攝氏度轉換為目標單位
+            switch (to) {
+                case 'celsius': return celsius;
+                case 'fahrenheit': return celsius * 9/5 + 32;
+                case 'kelvin': return celsius + 273.15;
+                case 'rankine': return celsius * 9/5 + 491.67;
+            }
+        }
+
+        function convertCurrency(value, from, to) {
+            // 使用即時匯率（如果可用）
+            if (Object.keys(exchangeRates).length > 0) {
+                const fromRate = exchangeRates[from] || 1;
+                const toRate = exchangeRates[to] || 1;
+                return (value / fromRate) * toRate;
+            } else {
+                // 備用預設匯率
+                const defaultRates = {
+                    'USD': 1, 'EUR': 0.85, 'JPY': 110, 'CNY': 6.45, 'TWD': 28.5,
+                    'GBP': 0.73, 'KRW': 1180, 'HKD': 7.8, 'SGD': 1.35, 'AUD': 1.35,
+                    'CAD': 1.25, 'CHF': 0.92
+                };
+                const fromRate = defaultRates[from] || 1;
+                const toRate = defaultRates[to] || 1;
+                return (value / fromRate) * toRate;
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('fromValue').value = '';
+            document.getElementById('toValue').value = '';
+        }
+
+        async function refreshExchangeRates() {
+            const notice = document.getElementById('currencyNotice');
+            notice.innerHTML = '🔄 正在更新匯率...';
+            notice.className = 'mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-100 text-sm';
+            
+            const success = await loadExchangeRates();
+            if (success) {
+                // 重新計算當前轉換
+                convert();
+            }
+        }
+
+        // 支持反向輸入
+        document.getElementById('toValue').addEventListener('input', function() {
+            if (this.readOnly) return;
+            
+            const toValue = parseFloat(this.value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const fromValueInput = document.getElementById('fromValue');
+            
+            if (isNaN(toValue) || toValue === '') {
+                fromValueInput.value = '';
+                return;
+            }
+            
+            const categoryData = units[currentCategory];
+            let result;
+            
+            if (currentCategory === 'temperature') {
+                result = convertTemperature(toValue, toUnit, fromUnit);
+            } else if (currentCategory === 'currency') {
+                result = convertCurrency(toValue, toUnit, fromUnit);
+            } else {
+                const fromFactor = categoryData.units[fromUnit].factor;
+                const toFactor = categoryData.units[toUnit].factor;
+                result = (toValue * toFactor) / fromFactor;
+            }
+            
+            fromValueInput.value = result.toFixed(6).replace(/\.?0+$/, '');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9783da8be144f1bc',t:'MTc1NjcyMDEyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
