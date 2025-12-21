@@ -20,159 +20,140 @@
       border-radius: 15px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     }
-    #searchArea { display: block; }
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
-    }
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+    h1 { text-align: center; }
+    .search-box { margin-bottom: 20px; }
     #searchBar {
-      flex: 1;
-      padding: 14px 16px;
+      width: 100%;
+      padding: 14px;
       font-size: 18px;
-      border: 2px solid #ddd;
       border-radius: 12px;
-      outline: none;
-      transition: all 0.3s ease;
-    }
-    #searchBar:focus {
-      border-color: #1e88e5;
-      box-shadow: 0 0 6px rgba(30,136,229,0.3);
+      border: 2px solid #ddd;
     }
     .entry {
       padding: 12px;
       border-bottom: 1px dashed #ccc;
       cursor: pointer;
-      transition: 0.2s;
     }
-    .entry:hover { background-color: #f0f0f0; }
-    .word { font-weight: bold; font-size: 20px; color: #222; }
-    .pron { font-style: italic; color: #666; }
+    .entry:hover { background: #f0f0f0; }
+    .word { font-size: 20px; font-weight: bold; }
+    .pron { color: #666; }
     #detail { display: none; }
-    #back {
-      cursor: pointer;
-      color: #1E88E5;
-      font-weight: bold;
-      margin-bottom: 15px;
-      display: inline-block;
-    }
-    #back:hover { text-decoration: underline; }
+    #back { cursor: pointer; color: #1E88E5; margin-bottom: 10px; display: inline-block; }
     .error { color: red; font-weight: bold; }
+    .loading {
+      text-align: center;
+      font-size: 32px;
+      padding: 40px 0;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="searchArea">
-      <h1>📘 字典</h1>
-      <div class="search-box">
-        <input type="text" id="searchBar" placeholder="輸入英文單字…" />
-      </div>
-    </div>
-
-    <div id="list"></div>
-
-    <div id="detail">
-      <div id="back" onclick="goBack()">← 返回</div>
-      <div id="detailContent"></div>
+<div class="container">
+  <div id="searchArea">
+    <h1>📘 字典</h1>
+    <div class="search-box">
+      <input id="searchBar" placeholder="輸入英文單字…" />
     </div>
   </div>
 
-  <script>
-    const queryInput = document.getElementById("searchBar");
-    const listDiv = document.getElementById("list");
-    const detailDiv = document.getElementById("detail");
-    const detailContent = document.getElementById("detailContent");
-    const searchArea = document.getElementById("searchArea");
+  <div id="list"></div>
 
-    let debounceTimer;
+  <div id="detail">
+    <div id="back" onclick="goBack()">← 返回</div>
+    <div id="detailContent"></div>
+  </div>
+</div>
 
-    queryInput.addEventListener("input", () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        searchWord(queryInput.value.trim());
-      }, 300);
-    });
+<script>
+const searchBar = document.getElementById("searchBar");
+const listDiv = document.getElementById("list");
+const detailDiv = document.getElementById("detail");
+const detailContent = document.getElementById("detailContent");
+const searchArea = document.getElementById("searchArea");
 
-    async function searchWord(word) {
-      if (!word) {
-        listDiv.innerHTML = "";
-        return;
-      }
-      listDiv.innerHTML = "⏳ 查詢中…";
-      try {
-        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-        if (!res.ok) throw new Error("查無資料");
-        const data = await res.json();
-        const entry = data[0];
-        const phonetic = entry.phonetic || "無音標";
+let debounce;
 
-        listDiv.innerHTML = "";
-        const entryDiv = document.createElement("div");
-        entryDiv.className = "entry";
-        entryDiv.innerHTML = `
-          <div class="word">${entry.word}</div>
-          <div class="pron">(${phonetic})</div>
-        `;
-        entryDiv.addEventListener("click", () => showDetail(data));
-        listDiv.appendChild(entryDiv);
-      } catch (err) {
-        listDiv.innerHTML = `<p class='error'>❌ ${err.message}</p>`;
-      }
-    }
+searchBar.addEventListener("input", () => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => {
+    searchWord(searchBar.value.trim());
+  }, 300);
+});
 
-    async function showDetail(data) {
-      const entry = data[0];
-      const phonetic = entry.phonetic || "無音標";
-      const audio = entry.phonetics.find(p => p.audio)?.audio || "";
-      const audioPlayer = audio ? `<audio controls src="${audio}"></audio>` : "";
+async function searchWord(word) {
+  if (!word) {
+    listDiv.innerHTML = "";
+    return;
+  }
 
-      const meanings = entry.meanings.map(m => {
-        const defs = m.definitions.map(d => {
-          const def = `📖 定義：${d.definition}`;
-          const example = d.example ? `<br>💬 例句：${d.example}` : "";
-          return `<p>${def}${example}</p>`;
-        }).join("");
-        return `<strong>🧠 詞性：</strong> ${m.partOfSpeech}<br>${defs}`;
-      }).join("<hr>");
+  listDiv.innerHTML = "<div class='loading'>⏳</div>";
 
-      detailContent.innerHTML = `
-        <div class="word">📖 ${entry.word}</div>
-        <div class="pron">(${phonetic})</div><br>
-        ${audioPlayer}
-        ${meanings}
-        <hr>
-        <div id="translation"><em>🌏 正在翻譯中…</em></div>
-      `;
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+    if (!res.ok) throw new Error("查無資料");
+    const data = await res.json();
+    const entry = data[0];
 
-      // MyMemory 翻譯 API
-      try {
-        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(entry.word)}&langpair=en|zh-TW`;
-        const res = await fetch(url);
-        const json = await res.json();
-        const translated = json.responseData.translatedText || "（無翻譯結果）";
-        document.getElementById("translation").innerHTML =
-          `🌏 中文翻譯：<strong>${translated}</strong>`;
-      } catch (err) {
-        document.getElementById("translation").innerHTML =
-          `<span class="error">❌ 翻譯失敗：${err.message}</span>`;
-      }
+    listDiv.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "entry";
+    div.innerHTML = `
+      <div class="word">${entry.word}</div>
+      <div class="pron">(${entry.phonetic || "無音標"})</div>
+    `;
+    div.onclick = () => showDetail(entry);
+    listDiv.appendChild(div);
 
-      searchArea.style.display = "none";
-      listDiv.style.display = "none";
-      detailDiv.style.display = "block";
-    }
+  } catch (e) {
+    listDiv.innerHTML = `<div class="error">❌ ${e.message}</div>`;
+  }
+}
 
-    function goBack() {
-      detailDiv.style.display = "none";
-      listDiv.style.display = "block";
-      searchArea.style.display = "block";
-      detailContent.innerHTML = "";
-    }
-  </script>
+async function showDetail(entry) {
+  // 只顯示 ⏳
+  listDiv.style.display = "none";
+  searchArea.style.display = "none";
+  detailDiv.style.display = "block";
+  detailContent.innerHTML = "<div class='loading'>⏳</div>";
+
+  try {
+    const audio = entry.phonetics.find(p => p.audio)?.audio || "";
+    const audioHTML = audio ? `<audio controls src="${audio}"></audio>` : "";
+
+    const meaningsHTML = entry.meanings.map(m =>
+      `<strong>🧠 ${m.partOfSpeech}</strong>` +
+      m.definitions.map(d =>
+        `<p>📖 ${d.definition}${d.example ? `<br>💬 ${d.example}` : ""}</p>`
+      ).join("")
+    ).join("<hr>");
+
+    // 等翻譯 API
+    const res = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(entry.word)}&langpair=en|zh-TW`
+    );
+    const json = await res.json();
+    const translated = json.responseData.translatedText || "（無翻譯）";
+
+    // API 回來後才顯示內容
+    detailContent.innerHTML = `
+      <div class="word">📖 ${entry.word}</div>
+      <div class="pron">(${entry.phonetic || "無音標"})</div><br>
+      ${audioHTML}
+      ${meaningsHTML}
+      <hr>
+      🌏 中文翻譯：<strong>${translated}</strong>
+    `;
+
+  } catch (e) {
+    detailContent.innerHTML = `<div class="error">❌ ${e.message}</div>`;
+  }
+}
+
+function goBack() {
+  detailDiv.style.display = "none";
+  listDiv.style.display = "block";
+  searchArea.style.display = "block";
+}
+</script>
 </body>
 </html>
