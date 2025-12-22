@@ -15,5 +15,7 @@ URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%8F%90
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/單位換算器.html
 # 3D魔術方塊
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/3D%E9%AD%94%E8%A1%93%E6%96%B9%E5%A1%8A.html
-# 字點
+# 字典
 URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/字典.html
+# 木魚
+URL : https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/木魚.html
