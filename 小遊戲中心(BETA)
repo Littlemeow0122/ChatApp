@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遊戲中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        
+        .game-card {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            transition: all 0.3s ease;
+            border: 1px solid #4b5563;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: #60a5fa;
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px #60a5fa, 0 0 20px #60a5fa, 0 0 30px #60a5fa;
+        }
+        
+        .game-screen {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+            border: 2px solid #374151;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen">
+    <div id="gameCenter" class="container mx-auto px-4 py-8">
+        <!-- 標題 -->
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-bold neon-text mb-4">🎮 遊戲中心</h1>
+            <p class="text-xl text-gray-300">選擇你喜歡的小遊戲開始玩吧！</p>
+        </div>
+
+        <!-- 遊戲選單 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
+            <!-- 猜數字遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('guess')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h3 class="text-2xl font-bold mb-3">猜數字</h3>
+                    <p class="text-gray-300 mb-4">我想了一個1-100的數字，你能猜中嗎？</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 記憶遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('memory')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🧠</div>
+                    <h3 class="text-2xl font-bold mb-3">記憶挑戰</h3>
+                    <p class="text-gray-300 mb-4">記住顏色序列，然後重複它們！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 反應遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('reaction')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">⚡</div>
+                    <h3 class="text-2xl font-bold mb-3">反應測試</h3>
+                    <p class="text-gray-300 mb-4">測試你的反應速度有多快！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 井字遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('tictactoe')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">⭕</div>
+                    <h3 class="text-2xl font-bold mb-3">井字遊戲</h3>
+                    <p class="text-gray-300 mb-4">經典的三連線遊戲，挑戰電腦！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 打地鼠 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('whack')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🔨</div>
+                    <h3 class="text-2xl font-bold mb-3">打地鼠</h3>
+                    <p class="text-gray-300 mb-4">快速點擊出現的地鼠得分！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 貪吃蛇 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('snake')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🐍</div>
+                    <h3 class="text-2xl font-bold mb-3">貪吃蛇</h3>
+                    <p class="text-gray-300 mb-4">控制蛇吃食物，但別撞到自己！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 擲骰子遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('dice')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🎲</div>
+                    <h3 class="text-2xl font-bold mb-3">擲骰子</h3>
+                    <p class="text-gray-300 mb-4">預測骰子點數，測試你的運氣！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 2048遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('2048')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🔢</div>
+                    <h3 class="text-2xl font-bold mb-3">2048</h3>
+                    <p class="text-gray-300 mb-4">合併數字方塊，達到2048！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 飛鏢遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('dart')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h3 class="text-2xl font-bold mb-3">飛鏢</h3>
+                    <p class="text-gray-300 mb-4">瞄準靶心，測試你的準確度！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 翻牌配對 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('flip')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🃏</div>
+                    <h3 class="text-2xl font-bold mb-3">翻牌配對</h3>
+                    <p class="text-gray-300 mb-4">翻開卡牌找到相同的配對！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 拼圖滑塊 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('puzzle')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🧩</div>
+                    <h3 class="text-2xl font-bold mb-3">拼圖滑塊</h3>
+                    <p class="text-gray-300 mb-4">移動方塊完成數字拼圖！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+
+            <!-- 平衡遊戲 -->
+            <div class="game-card rounded-2xl p-6 cursor-pointer" onclick="startGame('balance')">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">⚖️</div>
+                    <h3 class="text-2xl font-bold mb-3">平衡遊戲</h3>
+                    <p class="text-gray-300 mb-4">保持球的平衡，別讓它掉下來！</p>
+                    <div class="btn-primary px-6 py-3 rounded-lg font-semibold">開始遊戲</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="gameScreen" class="hidden fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center p-4">
+        <div class="game-screen rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="gameTitle" class="text-3xl font-bold neon-text"></h2>
+                <button onclick="backToMenu()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors">
+                    返回選單
+                </button>
+            </div>
+            <div id="gameContent" class="text-center"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentGame = null;
+        let gameData = {};
+
+        function startGame(gameType) {
+            currentGame = gameType;
+            document.getElementById('gameCenter').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            switch(gameType) {
+                case 'guess':
+                    startGuessGame();
+                    break;
+                case 'memory':
+                    startMemoryGame();
+                    break;
+                case 'reaction':
+                    startReactionGame();
+                    break;
+                case 'tictactoe':
+                    startTicTacToe();
+                    break;
+                case 'whack':
+                    startWhackMole();
+                    break;
+                case 'snake':
+                    startSnakeGame();
+                    break;
+                case 'dice':
+                    startDiceGame();
+                    break;
+                case '2048':
+                    start2048Game();
+                    break;
+                case 'dart':
+                    startDartGame();
+                    break;
+                case 'flip':
+                    startFlipGame();
+                    break;
+                case 'puzzle':
+                    startPuzzleGame();
+                    break;
+                case 'balance':
+                    startBalanceGame();
+                    break;
+            }
+        }
+
+        function backToMenu() {
+            document.getElementById('gameCenter').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            currentGame = null;
+            gameData = {};
+            // 清除所有計時器
+            if (gameData.gameLoop) clearInterval(gameData.gameLoop);
+            if (gameData.timerInterval) clearInterval(gameData.timerInterval);
+            if (gameData.moleInterval) clearInterval(gameData.moleInterval);
+            if (gameData.balanceLoop) clearInterval(gameData.balanceLoop);
+        }
+
+        // 猜數字遊戲
+        function startGuessGame() {
+            document.getElementById('gameTitle').textContent = '🎯 猜數字遊戲';
+            gameData.target = Math.floor(Math.random() * 100) + 1;
+            gameData.attempts = 0;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <p class="text-xl">我想了一個1到100之間的數字，你能猜中嗎？</p>
+                    <div class="space-y-4">
+                        <input type="number" id="guessInput" min="1" max="100" 
+                               class="bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-xl text-center w-32" 
+                               placeholder="輸入數字">
+                        <br>
+                        <button onclick="makeGuess()" class="btn-primary px-8 py-3 rounded-lg text-lg font-semibold">
+                            猜測
+                        </button>
+                    </div>
+                    <div id="guessResult" class="text-xl font-semibold"></div>
+                    <div id="guessAttempts" class="text-gray-300">嘗試次數: 0</div>
+                </div>
+            `;
+        }
+
+        function makeGuess() {
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+            const result = document.getElementById('guessResult');
+            const attempts = document.getElementById('guessAttempts');
+            
+            if (!guess || guess < 1 || guess > 100) {
+                result.textContent = '請輸入1到100之間的數字！';
+                result.className = 'text-xl font-semibold text-red-400';
+                return;
+            }
+            
+            gameData.attempts++;
+            attempts.textContent = `嘗試次數: ${gameData.attempts}`;
+            
+            if (guess === gameData.target) {
+                result.textContent = `🎉 恭喜！你猜對了！答案是 ${gameData.target}`;
+                result.className = 'text-xl font-semibold text-green-400';
+                input.disabled = true;
+            } else if (guess < gameData.target) {
+                result.textContent = '太小了！再試試更大的數字';
+                result.className = 'text-xl font-semibold text-yellow-400';
+            } else {
+                result.textContent = '太大了！再試試更小的數字';
+                result.className = 'text-xl font-semibold text-yellow-400';
+            }
+            
+            input.value = '';
+            input.focus();
+        }
+
+        // 記憶遊戲
+        function startMemoryGame() {
+            document.getElementById('gameTitle').textContent = '🧠 記憶挑戰';
+            gameData.sequence = [];
+            gameData.playerSequence = [];
+            gameData.level = 1;
+            gameData.isPlaying = false;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <p class="text-xl">記住顏色序列，然後重複它們！</p>
+                    <div id="memoryLevel" class="text-lg text-blue-400">關卡: 1</div>
+                    <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+                        <button id="red" class="w-24 h-24 bg-red-600 rounded-lg" onclick="playerClick('red')"></button>
+                        <button id="blue" class="w-24 h-24 bg-blue-600 rounded-lg" onclick="playerClick('blue')"></button>
+                        <button id="green" class="w-24 h-24 bg-green-600 rounded-lg" onclick="playerClick('green')"></button>
+                        <button id="yellow" class="w-24 h-24 bg-yellow-600 rounded-lg" onclick="playerClick('yellow')"></button>
+                    </div>
+                    <button onclick="startMemorySequence()" class="btn-primary px-8 py-3 rounded-lg text-lg font-semibold">
+                        開始
+                    </button>
+                    <div id="memoryMessage" class="text-lg"></div>
+                </div>
+            `;
+        }
+
+        function startMemorySequence() {
+            const colors = ['red', 'blue', 'green', 'yellow'];
+            gameData.sequence.push(colors[Math.floor(Math.random() * 4)]);
+            gameData.playerSequence = [];
+            gameData.isPlaying = true;
+            
+            document.getElementById('memoryMessage').textContent = '觀看序列...';
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < gameData.sequence.length) {
+                    flashColor(gameData.sequence[i]);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    document.getElementById('memoryMessage').textContent = '現在輪到你了！';
+                }
+            }, 800);
+        }
+
+        function flashColor(color) {
+            const button = document.getElementById(color);
+            button.style.opacity = '1';
+            button.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                button.style.opacity = '0.7';
+                button.style.transform = 'scale(1)';
+            }, 400);
+        }
+
+        function playerClick(color) {
+            if (!gameData.isPlaying) return;
+            
+            flashColor(color);
+            gameData.playerSequence.push(color);
+            
+            const currentIndex = gameData.playerSequence.length - 1;
+            
+            if (gameData.playerSequence[currentIndex] !== gameData.sequence[currentIndex]) {
+                document.getElementById('memoryMessage').textContent = '❌ 錯誤！遊戲結束';
+                gameData.isPlaying = false;
+                return;
+            }
+            
+            if (gameData.playerSequence.length === gameData.sequence.length) {
+                gameData.level++;
+                document.getElementById('memoryLevel').textContent = `關卡: ${gameData.level}`;
+                document.getElementById('memoryMessage').textContent = '✅ 正確！準備下一關...';
+                setTimeout(() => {
+                    startMemorySequence();
+                }, 1500);
+            }
+        }
+
+        // 反應測試遊戲
+        function startReactionGame() {
+            document.getElementById('gameTitle').textContent = '⚡ 反應測試';
+            gameData.startTime = 0;
+            gameData.bestTime = localStorage.getItem('bestReaction') || '無';
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <p class="text-xl">當背景變綠時立即點擊！</p>
+                    <div id="reactionArea" class="w-80 h-80 mx-auto bg-red-600 rounded-2xl flex items-center justify-center cursor-pointer text-2xl font-bold"
+                         onclick="reactionClick()">
+                        點擊開始
+                    </div>
+                    <div id="reactionResult" class="text-xl"></div>
+                    <div class="text-gray-300">最佳紀錄: ${gameData.bestTime}ms</div>
+                </div>
+            `;
+        }
+
+        function reactionClick() {
+            const area = document.getElementById('reactionArea');
+            const result = document.getElementById('reactionResult');
+            
+            if (area.classList.contains('bg-red-600')) {
+                area.classList.remove('bg-red-600');
+                area.classList.add('bg-yellow-600');
+                area.textContent = '等待...';
+                
+                const delay = Math.random() * 4000 + 1000;
+                setTimeout(() => {
+                    area.classList.remove('bg-yellow-600');
+                    area.classList.add('bg-green-600');
+                    area.textContent = '點擊！';
+                    gameData.startTime = Date.now();
+                }, delay);
+            } else if (area.classList.contains('bg-green-600')) {
+                const reactionTime = Date.now() - gameData.startTime;
+                result.textContent = `你的反應時間: ${reactionTime}ms`;
+                
+                if (!localStorage.getItem('bestReaction') || reactionTime < parseInt(localStorage.getItem('bestReaction'))) {
+                    localStorage.setItem('bestReaction', reactionTime);
+                    result.textContent += ' 🎉 新紀錄！';
+                }
+                
+                area.classList.remove('bg-green-600');
+                area.classList.add('bg-red-600');
+                area.textContent = '再試一次';
+            }
+        }
+
+        // 井字遊戲
+        function startTicTacToe() {
+            document.getElementById('gameTitle').textContent = '⭕ 井字遊戲';
+            gameData.board = Array(9).fill('');
+            gameData.currentPlayer = 'X';
+            gameData.gameOver = false;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <p class="text-xl">你是 X，電腦是 O</p>
+                    <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+                        ${Array(9).fill(0).map((_, i) => 
+                            `<button id="cell${i}" class="w-20 h-20 bg-gray-700 border border-gray-500 rounded-lg text-3xl font-bold hover:bg-gray-600" 
+                                     onclick="makeMove(${i})"></button>`
+                        ).join('')}
+                    </div>
+                    <div id="ticTacResult" class="text-xl font-semibold"></div>
+                    <button onclick="resetTicTacToe()" class="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg">
+                        重新開始
+                    </button>
+                </div>
+            `;
+        }
+
+        function makeMove(index) {
+            if (gameData.board[index] || gameData.gameOver) return;
+            
+            gameData.board[index] = 'X';
+            document.getElementById(`cell${index}`).textContent = 'X';
+            
+            if (checkWinner()) return;
+            
+            setTimeout(() => {
+                computerMove();
+            }, 500);
+        }
+
+        function computerMove() {
+            const emptyCells = gameData.board.map((cell, index) => cell === '' ? index : null).filter(val => val !== null);
+            if (emptyCells.length === 0) return;
+            
+            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            gameData.board[randomIndex] = 'O';
+            document.getElementById(`cell${randomIndex}`).textContent = 'O';
+            
+            checkWinner();
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            
+            for (let pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (gameData.board[a] && gameData.board[a] === gameData.board[b] && gameData.board[a] === gameData.board[c]) {
+                    gameData.gameOver = true;
+                    document.getElementById('ticTacResult').textContent = 
+                        gameData.board[a] === 'X' ? '🎉 你贏了！' : '😅 電腦贏了！';
+                    return true;
+                }
+            }
+            
+            if (!gameData.board.includes('')) {
+                gameData.gameOver = true;
+                document.getElementById('ticTacResult').textContent = '🤝 平局！';
+                return true;
+            }
+            
+            return false;
+        }
+
+        function resetTicTacToe() {
+            gameData.board = Array(9).fill('');
+            gameData.gameOver = false;
+            document.getElementById('ticTacResult').textContent = '';
+            for (let i = 0; i < 9; i++) {
+                document.getElementById(`cell${i}`).textContent = '';
+            }
+        }
+
+        // 打地鼠遊戲
+        function startWhackMole() {
+            document.getElementById('gameTitle').textContent = '🔨 打地鼠';
+            gameData.score = 0;
+            gameData.timeLeft = 30;
+            gameData.moleInterval = null;
+            gameData.timerInterval = null;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex justify-between text-xl">
+                        <div>分數: <span id="whackScore">0</span></div>
+                        <div>時間: <span id="whackTime">30</span>s</div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 max-w-sm mx-auto">
+                        ${Array(9).fill(0).map((_, i) => 
+                            `<div id="hole${i}" class="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded-full flex items-center justify-center text-4xl cursor-pointer hover:bg-gray-700" 
+                                  onclick="whackMole(${i})">🕳️</div>`
+                        ).join('')}
+                    </div>
+                    <button onclick="startWhackGame()" class="btn-primary px-8 py-3 rounded-lg text-lg font-semibold">
+                        開始遊戲
+                    </button>
+                </div>
+            `;
+        }
+
+        function startWhackGame() {
+            gameData.score = 0;
+            gameData.timeLeft = 30;
+            document.getElementById('whackScore').textContent = '0';
+            document.getElementById('whackTime').textContent = '30';
+            
+            gameData.timerInterval = setInterval(() => {
+                gameData.timeLeft--;
+                document.getElementById('whackTime').textContent = gameData.timeLeft;
+                if (gameData.timeLeft <= 0) {
+                    endWhackGame();
+                }
+            }, 1000);
+            
+            gameData.moleInterval = setInterval(() => {
+                showMole();
+            }, 1000);
+        }
+
+        function showMole() {
+            const holes = Array.from({length: 9}, (_, i) => i);
+            const randomHole = holes[Math.floor(Math.random() * holes.length)];
+            const hole = document.getElementById(`hole${randomHole}`);
+            
+            hole.textContent = '🐹';
+            hole.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                if (hole.textContent === '🐹') {
+                    hole.textContent = '🕳️';
+                    hole.classList.remove('bg-green-600');
+                }
+            }, 800);
+        }
+
+        function whackMole(index) {
+            const hole = document.getElementById(`hole${index}`);
+            if (hole.textContent === '🐹') {
+                hole.textContent = '💥';
+                hole.classList.remove('bg-green-600');
+                hole.classList.add('bg-red-600');
+                gameData.score++;
+                document.getElementById('whackScore').textContent = gameData.score;
+                
+                setTimeout(() => {
+                    hole.textContent = '🕳️';
+                    hole.classList.remove('bg-red-600');
+                }, 200);
+            }
+        }
+
+        function endWhackGame() {
+            clearInterval(gameData.moleInterval);
+            clearInterval(gameData.timerInterval);
+            alert(`遊戲結束！你的分數是: ${gameData.score}`);
+        }
+
+        // 貪吃蛇遊戲
+        function startSnakeGame() {
+            document.getElementById('gameTitle').textContent = '🐍 貪吃蛇';
+            gameData.snake = [{x: 10, y: 10}];
+            gameData.food = {x: 15, y: 15};
+            gameData.direction = {x: 0, y: 0};
+            gameData.score = 0;
+            gameData.gameRunning = false;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-xl">分數: <span id="snakeScore">0</span></div>
+                    <canvas id="snakeCanvas" width="400" height="400" class="border-2 border-gray-600 bg-gray-900 mx-auto block"></canvas>
+                    <div class="text-center space-y-2">
+                        <button onclick="startSnake()" class="btn-primary px-6 py-2 rounded-lg">開始遊戲</button>
+                        <div class="text-sm text-gray-400">使用 WASD 或方向鍵控制</div>
+                    </div>
+                </div>
+            `;
+            
+            drawSnake();
+        }
+
+        function startSnake() {
+            gameData.gameRunning = true;
+            gameData.gameLoop = setInterval(updateSnake, 150);
+        }
+
+        function updateSnake() {
+            const head = {x: gameData.snake[0].x + gameData.direction.x, y: gameData.snake[0].y + gameData.direction.y};
+            
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20 || 
+                gameData.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                clearInterval(gameData.gameLoop);
+                gameData.gameRunning = false;
+                alert(`遊戲結束！分數: ${gameData.score}`);
+                return;
+            }
+            
+            gameData.snake.unshift(head);
+            
+            if (head.x === gameData.food.x && head.y === gameData.food.y) {
+                gameData.score++;
+                document.getElementById('snakeScore').textContent = gameData.score;
+                generateFood();
+            } else {
+                gameData.snake.pop();
+            }
+            
+            drawSnake();
+        }
+
+        function generateFood() {
+            gameData.food = {
+                x: Math.floor(Math.random() * 20),
+                y: Math.floor(Math.random() * 20)
+            };
+        }
+
+        function drawSnake() {
+            const canvas = document.getElementById('snakeCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, 400, 400);
+            
+            ctx.fillStyle = '#10b981';
+            gameData.snake.forEach(segment => {
+                ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+            });
+            
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(gameData.food.x * 20, gameData.food.y * 20, 18, 18);
+        }
+
+        // 擲骰子遊戲
+        function startDiceGame() {
+            document.getElementById('gameTitle').textContent = '🎲 擲骰子遊戲';
+            gameData.score = 0;
+            gameData.rounds = 0;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-xl">分數: <span id="diceScore">0</span> | 回合: <span id="diceRounds">0</span>/10</div>
+                    <p class="text-lg">預測下一次擲骰子的結果！</p>
+                    <div id="diceResult" class="text-8xl">🎲</div>
+                    <div class="grid grid-cols-3 gap-4 max-w-sm mx-auto">
+                        <button onclick="makePrediction('low')" class="btn-primary px-4 py-3 rounded-lg">
+                            小 (1-2)
+                        </button>
+                        <button onclick="makePrediction('mid')" class="btn-primary px-4 py-3 rounded-lg">
+                            中 (3-4)
+                        </button>
+                        <button onclick="makePrediction('high')" class="btn-primary px-4 py-3 rounded-lg">
+                            大 (5-6)
+                        </button>
+                    </div>
+                    <div id="diceMessage" class="text-lg"></div>
+                </div>
+            `;
+        }
+
+        function makePrediction(prediction) {
+            if (gameData.rounds >= 10) return;
+            
+            const dice = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('diceResult').textContent = dice;
+            
+            let correct = false;
+            if (prediction === 'low' && dice <= 2) correct = true;
+            if (prediction === 'mid' && dice >= 3 && dice <= 4) correct = true;
+            if (prediction === 'high' && dice >= 5) correct = true;
+            
+            if (correct) {
+                gameData.score += 10;
+                document.getElementById('diceMessage').textContent = '🎉 預測正確！+10分';
+                document.getElementById('diceMessage').className = 'text-lg text-green-400';
+            } else {
+                document.getElementById('diceMessage').textContent = '❌ 預測錯誤！';
+                document.getElementById('diceMessage').className = 'text-lg text-red-400';
+            }
+            
+            gameData.rounds++;
+            document.getElementById('diceScore').textContent = gameData.score;
+            document.getElementById('diceRounds').textContent = gameData.rounds;
+            
+            if (gameData.rounds >= 10) {
+                setTimeout(() => {
+                    alert(`遊戲結束！最終分數: ${gameData.score}/100`);
+                }, 1000);
+            }
+        }
+
+        // 2048遊戲
+        function start2048Game() {
+            document.getElementById('gameTitle').textContent = '🔢 2048遊戲';
+            gameData.board = Array(4).fill().map(() => Array(4).fill(0));
+            gameData.score = 0;
+            
+            // 添加兩個初始數字
+            addNewNumber();
+            addNewNumber();
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-xl">分數: <span id="game2048Score">0</span></div>
+                    <div id="board2048" class="grid grid-cols-4 gap-2 max-w-sm mx-auto bg-gray-800 p-4 rounded-lg">
+                        ${Array(16).fill(0).map((_, i) => 
+                            `<div id="tile${i}" class="w-16 h-16 bg-gray-700 rounded flex items-center justify-center text-lg font-bold"></div>`
+                        ).join('')}
+                    </div>
+                    <div class="text-sm text-gray-400">使用方向鍵或WASD移動</div>
+                    <button onclick="reset2048()" class="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg">
+                        重新開始
+                    </button>
+                </div>
+            `;
+            
+            updateBoard2048();
+        }
+
+        function addNewNumber() {
+            const emptyCells = [];
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (gameData.board[i][j] === 0) {
+                        emptyCells.push({x: i, y: j});
+                    }
+                }
+            }
+            
+            if (emptyCells.length > 0) {
+                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                gameData.board[randomCell.x][randomCell.y] = Math.random() < 0.9 ? 2 : 4;
+            }
+        }
+
+        function updateBoard2048() {
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const tile = document.getElementById(`tile${i * 4 + j}`);
+                    const value = gameData.board[i][j];
+                    tile.textContent = value === 0 ? '' : value;
+                    
+                    // 根據數字設置顏色
+                    if (value === 0) {
+                        tile.className = 'w-16 h-16 bg-gray-700 rounded flex items-center justify-center text-lg font-bold';
+                    } else if (value === 2) {
+                        tile.className = 'w-16 h-16 bg-gray-600 rounded flex items-center justify-center text-lg font-bold';
+                    } else if (value === 4) {
+                        tile.className = 'w-16 h-16 bg-gray-500 rounded flex items-center justify-center text-lg font-bold';
+                    } else if (value === 8) {
+                        tile.className = 'w-16 h-16 bg-orange-600 rounded flex items-center justify-center text-lg font-bold';
+                    } else if (value >= 16) {
+                        tile.className = 'w-16 h-16 bg-red-600 rounded flex items-center justify-center text-lg font-bold';
+                    }
+                }
+            }
+            document.getElementById('game2048Score').textContent = gameData.score;
+        }
+
+        function move2048(direction) {
+            let moved = false;
+            const newBoard = gameData.board.map(row => [...row]);
+            
+            if (direction === 'left' || direction === 'right') {
+                for (let i = 0; i < 4; i++) {
+                    let row = newBoard[i].filter(val => val !== 0);
+                    if (direction === 'right') row.reverse();
+                    
+                    for (let j = 0; j < row.length - 1; j++) {
+                        if (row[j] === row[j + 1]) {
+                            row[j] *= 2;
+                            gameData.score += row[j];
+                            row[j + 1] = 0;
+                        }
+                    }
+                    
+                    row = row.filter(val => val !== 0);
+                    while (row.length < 4) row.push(0);
+                    if (direction === 'right') row.reverse();
+                    
+                    if (JSON.stringify(row) !== JSON.stringify(gameData.board[i])) moved = true;
+                    newBoard[i] = row;
+                }
+            } else {
+                for (let j = 0; j < 4; j++) {
+                    let col = [];
+                    for (let i = 0; i < 4; i++) {
+                        if (newBoard[i][j] !== 0) col.push(newBoard[i][j]);
+                    }
+                    if (direction === 'down') col.reverse();
+                    
+                    for (let i = 0; i < col.length - 1; i++) {
+                        if (col[i] === col[i + 1]) {
+                            col[i] *= 2;
+                            gameData.score += col[i];
+                            col[i + 1] = 0;
+                        }
+                    }
+                    
+                    col = col.filter(val => val !== 0);
+                    while (col.length < 4) col.push(0);
+                    if (direction === 'down') col.reverse();
+                    
+                    for (let i = 0; i < 4; i++) {
+                        if (newBoard[i][j] !== col[i]) moved = true;
+                        newBoard[i][j] = col[i];
+                    }
+                }
+            }
+            
+            if (moved) {
+                gameData.board = newBoard;
+                addNewNumber();
+                updateBoard2048();
+                
+                // 檢查是否達到2048
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (gameData.board[i][j] === 2048) {
+                            alert('🎉 恭喜！你達到了2048！');
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        function reset2048() {
+            gameData.board = Array(4).fill().map(() => Array(4).fill(0));
+            gameData.score = 0;
+            addNewNumber();
+            addNewNumber();
+            updateBoard2048();
+        }
+
+        // 飛鏢遊戲
+        function startDartGame() {
+            document.getElementById('gameTitle').textContent = '🎯 飛鏢遊戲';
+            gameData.dartScore = 0;
+            gameData.dartsLeft = 10;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-xl">分數: <span id="dartTotalScore">0</span> | 飛鏢剩餘: <span id="dartsRemaining">10</span></div>
+                    <div class="relative mx-auto" style="width: 300px; height: 300px;">
+                        <svg width="300" height="300" class="cursor-crosshair" onclick="throwDart(event)">
+                            <circle cx="150" cy="150" r="140" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+                            <circle cx="150" cy="150" r="100" fill="#374151" stroke="#4b5563" stroke-width="2"/>
+                            <circle cx="150" cy="150" r="60" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+                            <circle cx="150" cy="150" r="20" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                            <circle cx="150" cy="150" r="5" fill="#fbbf24"/>
+                            <text x="150" y="30" text-anchor="middle" fill="white" font-size="14">100</text>
+                            <text x="150" y="280" text-anchor="middle" fill="white" font-size="14">50</text>
+                            <text x="150" y="160" text-anchor="middle" fill="white" font-size="14">200</text>
+                        </svg>
+                    </div>
+                    <div id="dartMessage" class="text-lg"></div>
+                </div>
+            `;
+        }
+
+        function throwDart(event) {
+            if (gameData.dartsLeft <= 0) return;
+            
+            const svg = event.currentTarget;
+            const rect = svg.getBoundingClientRect();
+            const x = event.clientX - rect.left - 150;
+            const y = event.clientY - rect.top - 150;
+            const distance = Math.sqrt(x * x + y * y);
+            
+            let points = 0;
+            if (distance <= 5) points = 500; // 靶心
+            else if (distance <= 20) points = 200; // 紅心
+            else if (distance <= 60) points = 100; // 內圈
+            else if (distance <= 100) points = 50; // 中圈
+            else if (distance <= 140) points = 10; // 外圈
+            
+            gameData.dartScore += points;
+            gameData.dartsLeft--;
+            
+            document.getElementById('dartTotalScore').textContent = gameData.dartScore;
+            document.getElementById('dartsRemaining').textContent = gameData.dartsLeft;
+            
+            if (points > 0) {
+                document.getElementById('dartMessage').textContent = `🎯 得分 ${points} 分！`;
+                document.getElementById('dartMessage').className = 'text-lg text-green-400';
+            } else {
+                document.getElementById('dartMessage').textContent = '❌ 脫靶了！';
+                document.getElementById('dartMessage').className = 'text-lg text-red-400';
+            }
+            
+            if (gameData.dartsLeft === 0) {
+                setTimeout(() => {
+                    alert(`遊戲結束！總分: ${gameData.dartScore}`);
+                }, 500);
+            }
+        }
+
+        // 翻牌配對遊戲
+        function startFlipGame() {
+            document.getElementById('gameTitle').textContent = '🃏 翻牌配對';
+            const symbols = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+            gameData.cards = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+            gameData.flipped = [];
+            gameData.matched = [];
+            gameData.moves = 0;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-xl">步數: <span id="flipMoves">0</span></div>
+                    <div class="grid grid-cols-4 gap-3 max-w-sm mx-auto">
+                        ${gameData.cards.map((symbol, i) => 
+                            `<div id="card${i}" class="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-2xl cursor-pointer hover:bg-blue-500" 
+                                  onclick="flipCard(${i})">🃏</div>`
+                        ).join('')}
+                    </div>
+                    <div id="flipMessage" class="text-lg"></div>
+                </div>
+            `;
+        }
+
+        function flipCard(index) {
+            if (gameData.flipped.length >= 2 || gameData.flipped.includes(index) || gameData.matched.includes(index)) return;
+            
+            const card = document.getElementById(`card${index}`);
+            card.textContent = gameData.cards[index];
+            card.classList.add('bg-gray-600');
+            gameData.flipped.push(index);
+            
+            if (gameData.flipped.length === 2) {
+                gameData.moves++;
+                document.getElementById('flipMoves').textContent = gameData.moves;
+                
+                setTimeout(() => {
+                    const [first, second] = gameData.flipped;
+                    if (gameData.cards[first] === gameData.cards[second]) {
+                        gameData.matched.push(first, second);
+                        document.getElementById('flipMessage').textContent = '✅ 配對成功！';
+                        document.getElementById('flipMessage').className = 'text-lg text-green-400';
+                        
+                        if (gameData.matched.length === 16) {
+                            setTimeout(() => {
+                                alert(`🎉 恭喜完成！總步數: ${gameData.moves}`);
+                            }, 500);
+                        }
+                    } else {
+                        document.getElementById(`card${first}`).textContent = '🃏';
+                        document.getElementById(`card${first}`).classList.remove('bg-gray-600');
+                        document.getElementById(`card${second}`).textContent = '🃏';
+                        document.getElementById(`card${second}`).classList.remove('bg-gray-600');
+                        document.getElementById('flipMessage').textContent = '❌ 不匹配，再試試！';
+                        document.getElementById('flipMessage').className = 'text-lg text-red-400';
+                    }
+                    gameData.flipped = [];
+                }, 1000);
+            }
+        }
+
+        // 拼圖滑塊遊戲
+        function startPuzzleGame() {
+            document.getElementById('gameTitle').textContent = '🧩 拼圖滑塊';
+            gameData.puzzle = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+            gameData.puzzleMoves = 0;
+            
+            // 打亂拼圖
+            for (let i = 0; i < 1000; i++) {
+                const emptyIndex = gameData.puzzle.indexOf(0);
+                const neighbors = getPuzzleNeighbors(emptyIndex);
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                swapPuzzleTiles(emptyIndex, randomNeighbor);
+            }
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-xl">步數: <span id="puzzleMoves">0</span></div>
+                    <div class="grid grid-cols-4 gap-1 max-w-sm mx-auto bg-gray-800 p-2 rounded-lg">
+                        ${gameData.puzzle.map((num, i) => 
+                            `<div id="puzzle${i}" class="w-16 h-16 ${num === 0 ? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} rounded flex items-center justify-center text-lg font-bold cursor-pointer" 
+                                  onclick="movePuzzleTile(${i})">${num === 0 ? '' : num}</div>`
+                        ).join('')}
+                    </div>
+                    <div id="puzzleMessage" class="text-lg"></div>
+                </div>
+            `;
+        }
+
+        function getPuzzleNeighbors(index) {
+            const neighbors = [];
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            
+            if (row > 0) neighbors.push(index - 4); // 上
+            if (row < 3) neighbors.push(index + 4); // 下
+            if (col > 0) neighbors.push(index - 1); // 左
+            if (col < 3) neighbors.push(index + 1); // 右
+            
+            return neighbors;
+        }
+
+        function swapPuzzleTiles(index1, index2) {
+            [gameData.puzzle[index1], gameData.puzzle[index2]] = [gameData.puzzle[index2], gameData.puzzle[index1]];
+        }
+
+        function movePuzzleTile(index) {
+            const emptyIndex = gameData.puzzle.indexOf(0);
+            const neighbors = getPuzzleNeighbors(emptyIndex);
+            
+            if (neighbors.includes(index)) {
+                swapPuzzleTiles(index, emptyIndex);
+                gameData.puzzleMoves++;
+                document.getElementById('puzzleMoves').textContent = gameData.puzzleMoves;
+                
+                // 更新顯示
+                for (let i = 0; i < 16; i++) {
+                    const tile = document.getElementById(`puzzle${i}`);
+                    const num = gameData.puzzle[i];
+                    tile.textContent = num === 0 ? '' : num;
+                    tile.className = `w-16 h-16 ${num === 0 ? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} rounded flex items-center justify-center text-lg font-bold cursor-pointer`;
+                }
+                
+                // 檢查是否完成
+                const solved = gameData.puzzle.slice(0, 15).every((num, i) => num === i + 1) && gameData.puzzle[15] === 0;
+                if (solved) {
+                    document.getElementById('puzzleMessage').textContent = `🎉 恭喜完成！步數: ${gameData.puzzleMoves}`;
+                    document.getElementById('puzzleMessage').className = 'text-lg text-green-400';
+                }
+            }
+        }
+
+        // 平衡遊戲
+        function startBalanceGame() {
+            document.getElementById('gameTitle').textContent = '⚖️ 平衡遊戲';
+            gameData.ballPosition = 200;
+            gameData.ballVelocity = 0;
+            gameData.platformPosition = 200;
+            gameData.balanceScore = 0;
+            gameData.balanceTime = 30;
+            
+            document.getElementById('gameContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex justify-between text-xl">
+                        <div>分數: <span id="balanceScore">0</span></div>
+                        <div>時間: <span id="balanceTime">30</span>s</div>
+                    </div>
+                    <div class="relative mx-auto bg-gray-900 rounded-lg" style="width: 400px; height: 300px;">
+                        <canvas id="balanceCanvas" width="400" height="300" class="rounded-lg"></canvas>
+                    </div>
+                    <div class="text-center space-y-2">
+                        <button onclick="startBalanceGame()" class="btn-primary px-6 py-2 rounded-lg">開始遊戲</button>
+                        <div class="text-sm text-gray-400">使用左右方向鍵或A/D控制平台</div>
+                    </div>
+                </div>
+            `;
+            
+            drawBalance();
+        }
+
+        function startBalance() {
+            gameData.balanceRunning = true;
+            gameData.balanceLoop = setInterval(updateBalance, 50);
+            
+            gameData.balanceTimer = setInterval(() => {
+                gameData.balanceTime--;
+                document.getElementById('balanceTime').textContent = gameData.balanceTime;
+                if (gameData.balanceTime <= 0) {
+                    endBalanceGame();
+                }
+            }, 1000);
+        }
+
+        function updateBalance() {
+            // 重力和物理
+            gameData.ballVelocity += 0.5; // 重力
+            gameData.ballPosition += gameData.ballVelocity;
+            
+            // 平台碰撞檢測
+            if (gameData.ballPosition >= 250 && 
+                gameData.ballPosition <= gameData.platformPosition + 80 && 
+                gameData.ballPosition >= gameData.platformPosition - 20) {
+                gameData.ballPosition = 250;
+                gameData.ballVelocity = -Math.abs(gameData.ballVelocity) * 0.8;
+                gameData.balanceScore++;
+                document.getElementById('balanceScore').textContent = gameData.balanceScore;
+            }
+            
+            // 邊界檢測
+            if (gameData.ballPosition > 380) {
+                endBalanceGame();
+                return;
+            }
+            
+            drawBalance();
+        }
+
+        function drawBalance() {
+            const canvas = document.getElementById('balanceCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清除畫布
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, 400, 300);
+            
+            // 畫球
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(gameData.ballPosition, 250, 10, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 畫平台
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(gameData.platformPosition, 270, 80, 10);
+        }
+
+        function endBalanceGame() {
+            if (gameData.balanceLoop) clearInterval(gameData.balanceLoop);
+            if (gameData.balanceTimer) clearInterval(gameData.balanceTimer);
+            gameData.balanceRunning = false;
+            alert(`遊戲結束！分數: ${gameData.balanceScore}`);
+        }
+
+        // 鍵盤控制
+        document.addEventListener('keydown', (e) => {
+            if (currentGame === 'snake' && gameData.gameRunning) {
+                switch(e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        if (gameData.direction.y === 0) gameData.direction = {x: 0, y: -1};
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        if (gameData.direction.y === 0) gameData.direction = {x: 0, y: 1};
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        if (gameData.direction.x === 0) gameData.direction = {x: -1, y: 0};
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        if (gameData.direction.x === 0) gameData.direction = {x: 1, y: 0};
+                        break;
+                }
+            }
+            
+            if (currentGame === '2048') {
+                switch(e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        move2048('up');
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        move2048('down');
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        move2048('left');
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        move2048('right');
+                        break;
+                }
+            }
+            
+            if (currentGame === 'balance' && gameData.balanceRunning) {
+                switch(e.key) {
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        gameData.platformPosition = Math.max(0, gameData.platformPosition - 10);
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        gameData.platformPosition = Math.min(320, gameData.platformPosition + 10);
+                        break;
+                }
+            }
+            
+            if (currentGame === 'guess' && e.key === 'Enter') {
+                makeGuess();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b1e91691200f1e0',t:'MTc2NjM5NTQ4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
