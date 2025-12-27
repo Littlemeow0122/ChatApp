@@ -26,3 +26,7 @@ URL: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/木魚.htm
 URL: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E5%96%AE%E4%BD%8D%E6%8F%9B%E7%AE%97%E5%99%A8.html
 # 小遊戲
 URL: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/小遊戲.html
+# 泡泡消除遊戲
+URL: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%B3%A1%E6%B3%A1%E6%B6%88%E9%99%A4%E9%81%8A%E6%88%B2.html 
+# 抱抱消除遊戲(手機版)
+URL: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%B3%A1%E6%B3%A1%E6%B6%88%E9%99%A4%E9%81%8A%E6%88%B2(%E6%89%8B%E6%A9%9F%E7%89%88).html
