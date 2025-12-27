@@ -1,6 +1,6 @@
 # <img src="https://static.wikia.nocookie.net/windows/images/0/01/GitHub_logo_2013.png" style="height:64px;margin-right:32px"/>
 [Littlemeow0122/HTML-Work](https://github.com/Littlemeow0122/HTML-Work/tree/main)  
-* 更新日期: 2025/12/27
+* `更新日期: 2025/12/27`
 ---
 [README.md](https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/README.md.html)
  # HTML Work
