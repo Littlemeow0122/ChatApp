@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>泡泡消除遊戲</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    .bubble {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.3s;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1),
+                  inset 5px 5px 10px rgba(255, 255, 255, 0.3),
+                  0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .bubble:hover {
+      transform: scale(1.1);
+    }
+    
+    .bubble.selected {
+      border-color: #ffffff;
+      border-width: 4px;
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+    
+    .bubble.removing {
+      animation: pop 0.3s ease-out forwards;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    
+    @keyframes pop {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    
+    @keyframes fall {
+      from { transform: translateY(-100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .bubble.falling {
+      animation: fall 0.4s ease-out;
+    }
+    
+    .score-pop {
+      position: fixed;
+      font-size: 2rem;
+      font-weight: bold;
+      pointer-events: none;
+      animation: scoreFloat 1s ease-out forwards;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    @keyframes scoreFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
+    }
+    
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="w-full h-full flex flex-col overflow-auto"></div>
+  <script>
+    const defaultConfig = {
+      background_color: "#667eea",
+      surface_color: "#ffffff",
+      text_color: "#1a202c",
+      primary_action_color: "#48bb78",
+      secondary_action_color: "#4299e1",
+      font_family: "sans-serif",
+      font_size: 16,
+      game_title: "🎈 泡泡消除",
+      score_label: "分數",
+      moves_label: "步數",
+      restart_button: "重新開始",
+      reset_button: "重置分數",
+      high_score_label: "最高分"
+    };
+
+    let gameState = {
+      grid: [],
+      score: 0,
+      moves: 0,
+      selectedBubbles: [],
+      isLoading: false
+    };
+
+    let savedData = [];
+    let currentGameRecord = null;
+
+    const GRID_SIZE = 8;
+    const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+
+    const dataHandler = {
+      onDataChanged(data) {
+        savedData = data;
+        render();
+      }
+    };
+
+    async function initDataSDK() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error("Failed to initialize data SDK");
+        }
+      }
+    }
+
+    function getHighScore() {
+      if (savedData.length === 0) return 0;
+      return Math.max(...savedData.map(record => record.high_score || 0));
+    }
+
+    async function saveScore() {
+      if (!window.dataSdk) return;
+      
+      if (gameState.score === 0) return;
+
+      gameState.isLoading = true;
+      render();
+
+      if (currentGameRecord) {
+        const updatedRecord = {
+          ...currentGameRecord,
+          high_score: Math.max(currentGameRecord.high_score, gameState.score),
+          total_moves: currentGameRecord.total_moves + gameState.moves,
+          timestamp: Date.now()
+        };
+        const result = await window.dataSdk.update(updatedRecord);
+        if (!result.isOk) {
+          console.error("Failed to update score");
+        }
+      } else {
+        const newRecord = {
+          game_id: "bubble_game_" + Date.now(),
+          high_score: gameState.score,
+          total_moves: gameState.moves,
+          timestamp: Date.now()
+        };
+        const result = await window.dataSdk.create(newRecord);
+        if (result.isOk) {
+          currentGameRecord = savedData.find(r => r.game_id === newRecord.game_id);
+        } else {
+          console.error("Failed to save score");
+        }
+      }
+
+      gameState.isLoading = false;
+      render();
+    }
+
+    function initGame() {
+      gameState.grid = [];
+      gameState.score = 0;
+      gameState.moves = 0;
+      gameState.selectedBubbles = [];
+      
+      for (let i = 0; i < GRID_SIZE; i++) {
+        gameState.grid[i] = [];
+        for (let j = 0; j < GRID_SIZE; j++) {
+          gameState.grid[i][j] = {
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            id: `${i}-${j}`
+          };
+        }
+      }
+      
+      render();
+    }
+
+    function findConnectedBubbles(row, col, color, visited = new Set()) {
+      const key = `${row}-${col}`;
+      
+      if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return [];
+      if (visited.has(key)) return [];
+      if (!gameState.grid[row][col] || gameState.grid[row][col].color !== color) return [];
+      
+      visited.add(key);
+      let connected = [{row, col}];
+      
+      connected = connected.concat(findConnectedBubbles(row - 1, col, color, visited));
+      connected = connected.concat(findConnectedBubbles(row + 1, col, color, visited));
+      connected = connected.concat(findConnectedBubbles(row, col - 1, color, visited));
+      connected = connected.concat(findConnectedBubbles(row, col + 1, color, visited));
+      
+      return connected;
+    }
+
+    function handleBubbleClick(row, col) {
+      if (!gameState.grid[row][col]) return;
+      
+      const color = gameState.grid[row][col].color;
+      const connected = findConnectedBubbles(row, col, color);
+      
+      if (connected.length < 2) return;
+      
+      gameState.selectedBubbles = connected;
+      render();
+      
+      setTimeout(() => {
+        removeBubbles(connected);
+      }, 300);
+    }
+
+    async function removeBubbles(bubbles) {
+      const scoreGain = bubbles.length * bubbles.length * 10;
+      gameState.score += scoreGain;
+      gameState.moves++;
+      
+      showScorePopup(scoreGain);
+      
+      bubbles.forEach(({row, col}) => {
+        const bubble = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (bubble) {
+          bubble.classList.add('removing');
+        }
+      });
+      
+      setTimeout(async () => {
+        bubbles.forEach(({row, col}) => {
+          gameState.grid[row][col] = null;
+        });
+        
+        applyGravity();
+        fillEmpty();
+        gameState.selectedBubbles = [];
+        
+        await saveScore();
+        render();
+      }, 300);
+    }
+
+    function applyGravity() {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        let emptyRow = GRID_SIZE - 1;
+        
+        for (let row = GRID_SIZE - 1; row >= 0; row--) {
+          if (gameState.grid[row][col]) {
+            if (row !== emptyRow) {
+              gameState.grid[emptyRow][col] = gameState.grid[row][col];
+              gameState.grid[row][col] = null;
+            }
+            emptyRow--;
+          }
+        }
+      }
+    }
+
+    function fillEmpty() {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        for (let row = 0; row < GRID_SIZE; row++) {
+          if (!gameState.grid[row][col]) {
+            gameState.grid[row][col] = {
+              color: COLORS[Math.floor(Math.random() * COLORS.length)],
+              id: `${row}-${col}-${Date.now()}`
+            };
+          }
+        }
+      }
+    }
+
+    function showScorePopup(score) {
+      const popup = document.createElement('div');
+      popup.className = 'score-pop';
+      popup.textContent = `+${score}`;
+      popup.style.left = '50%';
+      popup.style.top = '30%';
+      popup.style.transform = 'translateX(-50%)';
+      popup.style.color = window.elementSdk?.config?.primary_action_color || defaultConfig.primary_action_color;
+      document.body.appendChild(popup);
+      
+      setTimeout(() => popup.remove(), 1000);
+    }
+
+    function showResetConfirmation() {
+      const config = window.elementSdk?.config || defaultConfig;
+      const fontSize = config.font_size || defaultConfig.font_size;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop';
+      modal.innerHTML = `
+        <div class="modal-content" style="background-color: ${config.surface_color};">
+          <h2 style="font-size: ${fontSize * 1.5}px; color: ${config.text_color}; margin-bottom: 1rem;" class="font-bold text-center">確認重置分數</h2>
+          <p style="font-size: ${fontSize}px; color: ${adjustColor(config.text_color, 40)}; margin-bottom: 1.5rem;" class="text-center">
+            您確定要重置所有分數記錄嗎？<br>此動作無法返回！
+          </p>
+          <div class="flex gap-3 justify-center">
+            <button id="cancel-reset" class="px-6 py-2 rounded-lg font-semibold transition-transform hover:scale-105" 
+                    style="background-color: ${config.secondary_action_color}; color: ${config.surface_color}; font-size: ${fontSize}px;">
+              取消
+            </button>
+            <button id="confirm-reset" class="px-6 py-2 rounded-lg font-semibold transition-transform hover:scale-105" 
+                    style="background-color: #ef4444; color: ${config.surface_color}; font-size: ${fontSize}px;">
+              確定重置
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      document.getElementById('cancel-reset').addEventListener('click', () => {
+        modal.remove();
+      });
+      
+      document.getElementById('confirm-reset').addEventListener('click', async () => {
+        modal.remove();
+        await resetAllScores();
+      });
+    }
+
+    async function resetAllScores() {
+      if (!window.dataSdk || savedData.length === 0) return;
+      
+      gameState.isLoading = true;
+      render();
+      
+      for (const record of savedData) {
+        await window.dataSdk.delete(record);
+      }
+      
+      currentGameRecord = null;
+      gameState.isLoading = false;
+      render();
+    }
+
+    function render() {
+      const config = window.elementSdk?.config || defaultConfig;
+      const app = document.getElementById('app');
+      
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Arial, sans-serif';
+      const fontSize = config.font_size || defaultConfig.font_size;
+      const highScore = getHighScore();
+      
+      app.style.background = `linear-gradient(135deg, ${config.background_color} 0%, ${adjustColor(config.background_color, -20)} 100%)`;
+      app.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      
+      app.innerHTML = `
+        <div class="w-full max-w-2xl mx-auto p-6">
+          <div class="text-center mb-6">
+            <h1 id="title" style="font-size: ${fontSize * 2}px; color: ${config.surface_color}; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);" class="font-bold mb-4">${config.game_title}</h1>
+            
+            <div class="flex justify-center gap-4 mb-4 flex-wrap">
+              <div class="px-6 py-3 rounded-lg" style="background-color: ${config.surface_color};">
+                <div style="font-size: ${fontSize * 0.85}px; color: ${adjustColor(config.text_color, 40)};" class="font-semibold">${config.score_label}</div>
+                <div id="score" style="font-size: ${fontSize * 1.5}px; color: ${config.text_color};" class="font-bold">${gameState.score}</div>
+              </div>
+              <div class="px-6 py-3 rounded-lg" style="background-color: ${config.surface_color};">
+                <div style="font-size: ${fontSize * 0.85}px; color: ${adjustColor(config.text_color, 40)};" class="font-semibold">${config.moves_label}</div>
+                <div id="moves" style="font-size: ${fontSize * 1.5}px; color: ${config.text_color};" class="font-bold">${gameState.moves}</div>
+              </div>
+              <div class="px-6 py-3 rounded-lg" style="background-color: ${config.primary_action_color};">
+                <div style="font-size: ${fontSize * 0.85}px; color: ${config.surface_color};" class="font-semibold">${config.high_score_label}</div>
+                <div id="high-score" style="font-size: ${fontSize * 1.5}px; color: ${config.surface_color};" class="font-bold">${highScore}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="text-center mb-4 px-4" style="color: ${config.surface_color}; font-size: ${fontSize * 0.9}px;">
+            <p>兩個以上相連的同色泡泡都可以消除(不包括橫線)，相連的同色泡泡越多，分數越多🎯</p>
+          </div>
+          
+          <div class="p-6 rounded-2xl shadow-2xl mb-6" style="background-color: ${config.surface_color};">
+            <div id="grid" class="grid gap-2" style="grid-template-columns: repeat(8, 50px); justify-content: center;">
+              ${renderGrid()}
+            </div>
+          </div>
+          
+          <div class="text-center flex gap-3 justify-center flex-wrap">
+            <button id="restart" class="px-8 py-3 rounded-lg font-bold shadow-lg transition-transform hover:scale-105 ${gameState.isLoading ? 'opacity-50' : ''}" 
+                    style="background-color: ${config.primary_action_color}; color: ${config.surface_color}; font-size: ${fontSize}px;"
+                    ${gameState.isLoading ? 'disabled' : ''}>
+              ${gameState.isLoading ? '儲存中...' : config.restart_button}
+            </button>
+            <button id="reset" class="px-8 py-3 rounded-lg font-bold shadow-lg transition-transform hover:scale-105 ${gameState.isLoading ? 'opacity-50' : ''}" 
+                    style="background-color: ${config.secondary_action_color}; color: ${config.surface_color}; font-size: ${fontSize}px;"
+                    ${gameState.isLoading ? 'disabled' : ''}>
+              ${config.reset_button}
+            </button>
+          </div>
+        </div>
+      `;
+      
+      if (!gameState.isLoading) {
+        document.getElementById('restart').addEventListener('click', initGame);
+        document.getElementById('reset').addEventListener('click', showResetConfirmation);
+        
+        document.querySelectorAll('.bubble').forEach(bubble => {
+          const row = parseInt(bubble.dataset.row);
+          const col = parseInt(bubble.dataset.col);
+          bubble.addEventListener('click', () => handleBubbleClick(row, col));
+        });
+      }
+    }
+
+    function renderGrid() {
+      let html = '';
+      for (let i = 0; i < GRID_SIZE; i++) {
+        for (let j = 0; j < GRID_SIZE; j++) {
+          if (gameState.grid[i][j]) {
+            const isSelected = gameState.selectedBubbles.some(b => b.row === i && b.col === j);
+            html += `<div class="bubble ${isSelected ? 'selected' : ''}" 
+                          data-row="${i}" 
+                          data-col="${j}"
+                          style="background-color: ${gameState.grid[i][j].color};"></div>`;
+          } else {
+            html += `<div style="width: 50px; height: 50px;"></div>`;
+          }
+        }
+      }
+      return html;
+    }
+
+    function adjustColor(color, percent) {
+      const num = parseInt(color.replace("#", ""), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = (num >> 16) + amt;
+      const G = (num >> 8 & 0x00FF) + amt;
+      const B = (num & 0x0000FF) + amt;
+      return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+        (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+        (B < 255 ? B < 1 ? 0 : B : 255))
+        .toString(16).slice(1);
+    }
+
+    async function onConfigChange(config) {
+      render();
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (value) => {
+              config.surface_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ surface_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.primary_action_color || defaultConfig.primary_action_color,
+            set: (value) => {
+              config.primary_action_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ primary_action_color: value });
+              }
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            if (window.elementSdk) {
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            if (window.elementSdk) {
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["game_title", config.game_title || defaultConfig.game_title],
+        ["score_label", config.score_label || defaultConfig.score_label],
+        ["moves_label", config.moves_label || defaultConfig.moves_label],
+        ["restart_button", config.restart_button || defaultConfig.restart_button],
+        ["reset_button", config.reset_button || defaultConfig.reset_button],
+        ["high_score_label", config.high_score_label || defaultConfig.high_score_label]
+      ]);
+    }
+
+    async function init() {
+      await initDataSDK();
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+      }
+      
+      initGame();
+    }
+
+    init();
+  </script>
+ 
+</body></html>
