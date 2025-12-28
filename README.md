@@ -44,4 +44,5 @@
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%B3%A1%E6%B3%A1%E6%B6%88%E9%99%A4%E9%81%8A%E6%88%B2.html 
 # 抱抱消除遊戲(手機版)
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E6%B3%A1%E6%B3%A1%E6%B6%88%E9%99%A4%E9%81%8A%E6%88%B2(%E6%89%8B%E6%A9%9F%E7%89%88).html  
-
+# 高質感QRCode產生器
+>**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E9%AB%98%E8%B3%AA%E6%84%9FQRCode%E7%94%A2%E7%94%9F%E5%99%A8.html
