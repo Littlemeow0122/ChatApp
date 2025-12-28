@@ -2,7 +2,7 @@
 [Littlemeow0122/HTML-Work](https://github.com/Littlemeow0122/HTML-Work/tree/main)  
 * `創建日期: 2025/12/15`
 * `更新日期: 2025/12/27`
-* `版本: 1.5`
+* `版本: 2.0`
   
 [README.md](https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/README.md.html)
 
@@ -11,8 +11,9 @@
 ---
 **版本更新內容:**  
   
-`1.0` : 新增下載文件，請看「`Releases`」  
-`1.5` : 新增「`高質感QRCode產生器.html`」
+`1.0` : 新增多個下載文件，請看「`Releases`」  
+`1.5` : 新增「`高質感QRCode產生器.html`」  
+`2.0` : 將「`高質感QRCode產生器.html`」加入下載區，請看「`Releases`」
 
 ---
  # HTML Work
