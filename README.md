@@ -3,8 +3,15 @@
 * `創建日期: 2025/12/15`
 * `更新日期: 2025/12/27`
 * `版本: 1.0`
----
+  
 [README.md](https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/README.md.html)
+  
+---
+**版本更新內容:**  
+  
+`1.0` : 新增下載文件，請看「`Releases`」
+
+---
  # HTML Work
 **歡迎!!**  
 這裡是我的程式碼作品!!!
