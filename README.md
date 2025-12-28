@@ -10,7 +10,7 @@
   
 ---
 **版本更新內容:**  
->下載區請看「`Releases`」或按下「 <ins>↓</ins> 」
+>下載區請看「`Releases`」或點擊「 <ins>↓</ins> 」
   
 `1.0` : 新增多個下載文件，請看下載區 [↓](https://github.com/Littlemeow0122/HTML-Work/releases/tag/1.0)  
 `1.5` : 新增「`高質感QRCode產生器.html`」[查看](https://github.com/Littlemeow0122/HTML-Work/blob/main/README.md#%E9%AB%98%E8%B3%AA%E6%84%9Fqrcode%E7%94%A2%E7%94%9F%E5%99%A8)  
