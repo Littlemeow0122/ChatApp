@@ -23,7 +23,8 @@
 **歡迎!!**  
 這裡是我的程式碼作品!!!
 # GIF庫!!!
->**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/GIF%E5%BA%AB!!!.html
+>**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/GIF%E5%BA%AB!!!.html  
+>**下載**: [↓](https://full-get-website-html.nicchen0122.workers.dev/url:https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/GIF%25E5%25BA%25AB!!!.html)
 # 魔法咒語特效
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/main/%E9%AD%94%E6%B3%95%E5%92%92%E8%AA%9E%E7%89%B9%E6%95%88.html
 # 智能翻譯器(Bug多)
