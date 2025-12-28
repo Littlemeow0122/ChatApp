@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch專案運行器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .run-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .run-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(244, 67, 54, 0.3);
+        }
+
+        .example-btn {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .example-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+        }
+
+        .preview-section {
+            padding: 40px;
+            background: white;
+            text-align: center;
+        }
+
+        .preview-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .scratch-container {
+            background: #f0f0f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+        }
+
+        .placeholder {
+            color: #666;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .scratch-frame {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-container {
+            position: relative;
+            width: 90vw;
+            height: 90vh;
+            max-width: 1200px;
+            max-height: 800px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .fullscreen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .fullscreen-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(244, 67, 54, 0.3);
+        }
+
+        .fullscreen-iframe {
+            width: 100%;
+            height: calc(100% - 80px);
+            border: none;
+            border-radius: 10px;
+        }
+
+        .fullscreen-btn {
+            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .fullscreen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(156, 39, 176, 0.3);
+        }
+
+        .tips {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 40px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .tips h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .tips ul {
+            color: #333;
+            padding-left: 20px;
+        }
+
+        .tips li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-section, .preview-section {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Scratch專案運行器</h1>
+            <p>輸入Scratch專案代碼，立即運行你的創作！</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="projectId">Scratch專案代碼：</label>
+                <input type="text" id="projectId" placeholder="例如：104">
+            </div>
+            
+            <div class="button-group">
+                <button class="run-btn" onclick="loadProject()">🚀 運行專案</button>
+                <button class="example-btn" onclick="loadExample()">📝 載入範例</button>
+                <button class="clear-btn" onclick="clearProject()">🗑️ 清除</button>
+            </div>
+        </div>
+
+        <div class="tips">
+            <h3>💡 使用說明：</h3>
+            <ul>
+                <li>在Scratch網站找到專案，網址中的數字就是專案代碼</li>
+                <li>例如：https://scratch.mit.edu/projects/104/ 中的 "104"</li>
+                <li>輸入代碼後點擊「運行專案」即可開始遊戲</li>
+                <li>支援所有公開的Scratch專案</li>
+            </ul>
+        </div>
+
+        <div class="preview-section">
+            <div class="preview-title">專案預覽</div>
+            <div class="scratch-container" id="scratchContainer">
+                <div class="placeholder">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🎯</div>
+                    <div>輸入專案代碼並點擊運行按鈕</div>
+                    <div style="margin-top: 10px; font-size: 1rem; color: #888;">專案將在這裡顯示</div>
+                </div>
+            </div>
+            <button class="fullscreen-btn" id="fullscreenBtn" onclick="openFullscreen()">🔍 全螢幕顯示</button>
+        </div>
+    </div>
+
+    <!-- 全螢幕覆蓋層 -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="fullscreen-container">
+            <div class="fullscreen-header">
+                <div class="fullscreen-title" id="fullscreenTitle">Scratch專案 - 全螢幕模式</div>
+                <button class="close-btn" onclick="closeFullscreen()">✕ 返回</button>
+            </div>
+            <iframe class="fullscreen-iframe" id="fullscreenIframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function loadProject() {
+            const projectId = document.getElementById('projectId').value.trim();
+            
+            if (!projectId) {
+                alert('請輸入Scratch專案代碼！');
+                return;
+            }
+            
+            // 驗證是否為數字
+            if (!/^\d+$/.test(projectId)) {
+                alert('專案代碼應該是純數字！');
+                return;
+            }
+            
+            const container = document.getElementById('scratchContainer');
+            
+            // 創建iframe
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://scratch.mit.edu/projects/${projectId}/embed`;
+            iframe.setAttribute('allowtransparency', 'true');
+            iframe.width = '485';
+            iframe.height = '402';
+            iframe.frameBorder = '0';
+            iframe.scrolling = 'no';
+            iframe.allowFullscreen = true;
+            iframe.className = 'scratch-frame';
+            
+            // 添加載入錯誤處理
+            iframe.onerror = function() {
+                container.innerHTML = `
+                    <div class="placeholder">
+                        <div style="font-size: 3rem; margin-bottom: 15px; color: #f44336;">❌</div>
+                        <div style="color: #f44336;">載入失敗</div>
+                        <div style="margin-top: 10px; font-size: 1rem; color: #888;">請檢查專案代碼是否正確</div>
+                    </div>
+                `;
+            };
+            
+            // 清空容器並添加iframe
+            container.innerHTML = '';
+            container.appendChild(iframe);
+            
+            // 顯示全螢幕按鈕
+            document.getElementById('fullscreenBtn').style.display = 'inline-block';
+            
+            // 儲存當前專案ID供全螢幕使用
+            window.currentProjectId = projectId;
+            
+            // 添加載入提示
+            const loadingDiv = document.createElement('div');
+            loadingDiv.innerHTML = `
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">⏳</div>
+                    <div>載入中...</div>
+                </div>
+            `;
+            loadingDiv.style.position = 'relative';
+            
+            // 3秒後移除載入提示
+            setTimeout(() => {
+                const loading = container.querySelector('div');
+                if (loading && loading.innerHTML.includes('載入中')) {
+                    loading.remove();
+                }
+            }, 3000);
+        }
+        
+        function loadExample() {
+            document.getElementById('projectId').value = '104';
+            loadProject();
+        }
+        
+        function clearProject() {
+            document.getElementById('projectId').value = '';
+            const container = document.getElementById('scratchContainer');
+            container.innerHTML = `
+                <div class="placeholder">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🎯</div>
+                    <div>輸入專案代碼並點擊運行按鈕</div>
+                    <div style="margin-top: 10px; font-size: 1rem; color: #888;">專案將在這裡顯示</div>
+                </div>
+            `;
+            // 隱藏全螢幕按鈕
+            document.getElementById('fullscreenBtn').style.display = 'none';
+            window.currentProjectId = null;
+        }
+        
+        // 全螢幕功能
+        function openFullscreen() {
+            if (!window.currentProjectId) return;
+            
+            const overlay = document.getElementById('fullscreenOverlay');
+            const iframe = document.getElementById('fullscreenIframe');
+            const title = document.getElementById('fullscreenTitle');
+            
+            // 設定iframe來源
+            iframe.src = `https://scratch.mit.edu/projects/${window.currentProjectId}/embed`;
+            iframe.setAttribute('allowtransparency', 'true');
+            iframe.setAttribute('allowfullscreen', 'true');
+            
+            // 更新標題
+            title.textContent = `Scratch專案 ${window.currentProjectId} - 全螢幕模式`;
+            
+            // 顯示覆蓋層
+            overlay.style.display = 'flex';
+            
+            // 防止背景滾動
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            const iframe = document.getElementById('fullscreenIframe');
+            
+            // 隱藏覆蓋層
+            overlay.style.display = 'none';
+            
+            // 清空iframe來源以停止播放
+            iframe.src = '';
+            
+            // 恢復背景滾動
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 點擊覆蓋層背景關閉全螢幕
+        document.getElementById('fullscreenOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFullscreen();
+            }
+        });
+        
+        // ESC鍵關閉全螢幕
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            }
+        });
+        
+        // 按Enter鍵也能運行
+        document.getElementById('projectId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadProject();
+            }
+        });
+    </script>
+
+
+</body></html>
