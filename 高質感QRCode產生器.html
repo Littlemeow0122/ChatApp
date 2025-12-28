@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>高質感QRCode 產生器</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#4caf50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/8711/8711968.png" />
+  <style>
+    
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #eef2f3, #8e9eab);
+      padding: 40px;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+    }
+    .container { background-color: #fff; padding: 30px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); }
+    h2 { text-align: center; color: #333; margin-bottom: 25px; }
+    .form-group { margin-bottom: 20px; }
+    label { font-weight: 600; margin-bottom: 8px; display: block; color: #555; }
+    input[type="text"], input[type="number"], input[type="color"], select { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; }
+    input:focus, select:focus { border-color: #4caf50; outline: none; }
+    input[type="file"] { border: none; }
+    button { width: 100%; padding: 12px; background-color: #4caf50; color: white; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.3s, transform 0.2s; margin-top: 10px; }
+    button:hover { background-color: #45a049; transform: scale(1.02); }
+    #qr { margin-top: 30px; text-align: center; padding: 20px; border-radius: 16px; }
+    #qr img { border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>高質感QRCode 產生器</h2>
+    <div class="form-group"><label>輸入內容：</label><input type="text" id="data" value="https://example.com"></div>
+    <div class="form-group"><label>前景顏色：</label><input type="color" id="fg-color" value="#000000"></div>
+    <div class="form-group"><label>背景顏色：</label><input type="color" id="bg-color" value="#ffffff"></div>
+    <div class="form-group"><label>上傳中央圖示：</label><input type="file" id="logo" accept="image/*"></div>
+    <div class="form-group"><label>馬眼樣式：</label><select id="corner-style"><option value="square">方形</option><option value="dot">圓點</option><option value="extra-rounded">超圓角</option></select></div>
+    <div class="form-group"><label>錯誤容忍率：</label><select id="error-correction"><option value="L">L</option><option value="M">M</option><option value="Q">Q</option><option value="H" selected>H</option></select></div>
+    <div class="form-group"><label>尺寸 (px)：</label><input type="number" id="size" value="300" min="100" max="1000"></div>
+    <div class="form-group"><label>背景樣式：</label><select id="gradient-switch"><option value="off">單色</option><option value="horizontal">水平漸層</option><option value="vertical">垂直漸層</option></select></div>
+    <div id="gradient-options" style="display:none;">
+      <div class="form-group"><label>漸層起始顏色：</label><input type="color" id="gradient-start" value="#ffffff"></div>
+      <div class="form-group"><label>漸層結束顏色：</label><input type="color" id="gradient-end" value="#cccccc"></div>
+    </div>
+    <button onclick="generateQRCode()">產生 QRCode</button>
+    <button onclick="downloadQRCode()">下載 QRCode</button>
+    <div id="qr"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    document.getElementById("gradient-switch").addEventListener("change", function(){
+      document.getElementById("gradient-options").style.display = (this.value!=="off")?"block":"none";
+    });
+    let qrCode;
+    function generateQRCode(){
+      const data=document.getElementById("data").value;
+      const fg=document.getElementById("fg-color").value;
+      const bg=document.getElementById("bg-color").value;
+      const file=document.getElementById("logo").files[0];
+      const corner=document.getElementById("corner-style").value;
+      const ec=document.getElementById("error-correction").value;
+      const size=+document.getElementById("size").value;
+      const grad=document.getElementById("gradient-switch").value;
+      const gs=document.getElementById("gradient-start").value;
+      const ge=document.getElementById("gradient-end").value;
+      qrCode=new QRCodeStyling({width:size,height:size,data,qrOptions:{errorCorrectionLevel:ec},dotsOptions:{color:fg,type:"rounded"},backgroundOptions:{color:"rgba(0,0,0,0)"},cornersSquareOptions:{type:corner,color:fg},cornersDotOptions:{type:corner,color:fg},image:"",imageOptions:{crossOrigin:"anonymous",margin:10,imageSize:0.3}});
+      const qrDiv=document.getElementById("qr");
+      qrDiv.innerHTML="";
+      qrDiv.style.background = grad==="horizontal"?`linear-gradient(to right,${gs},${ge})`:grad==="vertical"?`linear-gradient(to bottom,${gs},${ge})`:bg;
+      const render=()=>qrCode.getRawData("png").then(blob=>{const u=URL.createObjectURL(blob);const img=new Image();img.src=u;img.style.width=size+"px";img.style.height=size+"px";qrDiv.innerHTML="";qrDiv.appendChild(img);});
+      if(file){
+        const r=new FileReader();
+        r.onload=e=>{qrCode.update({image:e.target.result});render();}
+        ;r.readAsDataURL(file);
+      }else render();
+    }
+    function downloadQRCode(){
+      html2canvas(document.getElementById("qr")).then(canvas=>{
+        const a=document.createElement("a");
+        a.download="qr-with-bg.png";
+        a.href=canvas.toDataURL();
+        a.click();
+      });
+    }
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').then(console.log).catch(console.error));
+    }
+  </script>
+</body>
+</html>
