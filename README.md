@@ -56,3 +56,11 @@
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E9%AB%98%E8%B3%AA%E6%84%9FQRCode%E7%94%A2%E7%94%9F%E5%99%A8.html
 # Scratch專案載入器.html
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/Scratch%E5%B0%88%E6%A1%88%E8%BC%89%E5%85%A5%E5%99%A8.html
+
+---
+
+其他網頁:
+
+1.`https://sites.google.com/view/littlemeow0122-work/首頁`  
+2.`https://readme-proxy.nicchen0122.workers.dev/`  
+3.`https://full-get-website-html.nicchen0122.workers.dev/url:`使用方式: 在「`url:`」後面加上想要把網頁轉為HTML的URL，像:「`https://full-get-website-html.nicchen0122.workers.dev/url:https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/GIF庫!!!.html`」
