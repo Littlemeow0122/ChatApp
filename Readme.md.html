@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>README.md</title>
+
+  <!-- Markdown 轉 HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #fdfdfd;
+      color: #222;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    }
+    #readme {
+      max-width: 900px;
+      margin: auto;
+      line-height: 1.7;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    code {
+      background: #eee;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    a { color: #1a73e8; }
+  </style>
+</head>
+<body>
+
+<div id="readme">⏳ 載入中…</div>
+
+<script>
+const workerURL = "https://readme-proxy.nicchen0122.workers.dev";
+
+async function loadReadme() {
+  try {
+    const res = await fetch(workerURL + "?ts=" + Date.now());
+    const md = await res.text();
+    document.getElementById("readme").innerHTML = marked.parse(md);
+  } catch (err) {
+    document.getElementById("readme").innerText = "README 載入失敗";
+    console.error(err);
+  }
+}
+
+loadReadme();
+</script>
+
+</body>
+</html>
