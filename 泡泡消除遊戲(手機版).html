@@ -298,7 +298,7 @@
       document.getElementById('cancel-reset').onclick = () => modal.remove();
       document.getElementById('confirm-reset').onclick = async () => { modal.remove(); await resetHighScore(); };
       modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-    }
+    } 
 
     function render() {
       const config = defaultConfig;
